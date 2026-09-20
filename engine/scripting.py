@@ -7,6 +7,7 @@ to global languages. Zero hardcoded beat names or niche terms.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Callable, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
@@ -30,14 +31,28 @@ class ScriptResult(BaseModel):
     beats: List[StoryBeat] = Field(default_factory=list, description="Active story beats applied")
     voice_settings: VoiceSettings = Field(..., description="Resolved TTS voice configuration")
     target_duration: int = Field(..., description="Target duration in seconds")
-    estimated_duration: float = Field(..., description="Calculated duration from word count")
+    estimated_duration: float = Field(..., description="Calculated duration from word/syllable count")
 
 
 def estimate_duration_seconds(body_text: str, words_per_second: float = 3.2) -> float:
-    """Estimate spoken audio duration based on language and word count."""
-    words = len(body_text.split())
-    if words == 0:
+    """Estimate spoken audio duration based on language characteristics.
+    
+    Supports both spaced languages (English, etc.) and non-spaced languages
+    such as Thai, using character pacing benchmarks (~11.5 characters/sec in Thai).
+    """
+    if not body_text or not body_text.strip():
         return 0.0
+
+    cleaned = body_text.strip()
+    # Check if text contains Thai Unicode characters (0x0E00 - 0x0E7F)
+    thai_chars = re.findall(r"[\u0e00-\u0e7f]", cleaned)
+    if len(thai_chars) > len(cleaned) * 0.3:
+        # In Thai, fast short-form narration is ~11.0 to 12.5 characters per second
+        non_space_chars = len(re.sub(r"\s+", "", cleaned))
+        return round(non_space_chars / 11.5, 1)
+
+    # Standard spaced languages (English, Spanish, etc.)
+    words = len(cleaned.split())
     return round(words / words_per_second, 1)
 
 
@@ -76,18 +91,7 @@ def generate_script(
     target_duration: Optional[int] = None,
     llm_complete: Optional[Callable[[str], str]] = None,
 ) -> ScriptResult:
-    """Generate a viral short-form script using dynamic beats from the active niche pack.
-    
-    Args:
-        title: Story title/hook idea.
-        content: Researched story facts or background.
-        pack: NichePack instance. Defaults to active niche.
-        tier_id: Optional discovery tier ID for voice resolution.
-        category_id: Optional category ID for voice resolution.
-        tone: Optional tone guidance override.
-        target_duration: Target duration in seconds. Defaults to mid of visual.durationSeconds.
-        llm_complete: Optional LLM completion callable.
-    """
+    """Generate a viral short-form script using dynamic beats from the active niche pack."""
     niche = pack or load_niche()
     
     # 1. Resolve duration

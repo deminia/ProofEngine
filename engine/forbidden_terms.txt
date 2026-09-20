@@ -1,0 +1,9 @@
+# Centralized forbidden niche terms list for ProofEngine.
+# Both automated tests and CI grep checks read from this file.
+# Zero occurrences of these terms are permitted in engine/ or dashboard/src/.
+karma
+ghost
+theranos
+madoff
+supernatural
+underdog

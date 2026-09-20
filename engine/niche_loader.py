@@ -129,7 +129,7 @@ class VoiceConfig(BaseModel):
         category_id: Optional[str] = None,
         lang: str = "primary",
     ) -> VoiceSettings:
-        """Resolve the effective voice settings based on tier/category overrides."""
+        """Resolve the effective voice settings based on category/tier overrides."""
         if lang == "global" and self.global_ is not None:
             base = self.global_
         else:
@@ -193,6 +193,7 @@ class NicheConfig(BaseModel):
     author: Optional[str] = None
     license: Optional[str] = None
     description: str = Field(default="")
+    isPrivate: bool = Field(default=False, description="True if proprietary/secret sauce pack")
     languages: LanguagesConfig
     discoveryTiers: List[DiscoveryTier] = Field(default_factory=list)
     screening: ScreeningRubric
@@ -220,12 +221,24 @@ class NichePack(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Loader Functions
+# Loader Functions & State
 # ---------------------------------------------------------------------------
+
+_OVERRIDE_ACTIVE_NICHE: Optional[str] = None
+
+
+def set_active_niche_override(niche_id: Optional[str]) -> None:
+    """Dynamically set or clear the active niche in memory."""
+    global _OVERRIDE_ACTIVE_NICHE
+    _OVERRIDE_ACTIVE_NICHE = niche_id
+
 
 def find_project_root(start_dir: Optional[Path] = None) -> Path:
     """Locate the ProofEngine root directory by checking for engine.config.json."""
-    cur = (start_dir or Path.cwd()).resolve()
+    if start_dir:
+        cur = start_dir.resolve()
+    else:
+        cur = Path(__file__).resolve().parent.parent
     for parent in [cur] + list(cur.parents):
         if (parent / "engine.config.json").exists():
             return parent
@@ -235,13 +248,14 @@ def find_project_root(start_dir: Optional[Path] = None) -> Path:
 
 
 def get_active_niche_id(root_dir: Optional[Path] = None) -> str:
-    """Determine the active niche ID from env var NICHE or engine.config.json."""
-    # 1. Environment variable override
+    """Determine the active niche ID from in-memory override -> NICHE env var -> engine.config.json."""
+    if _OVERRIDE_ACTIVE_NICHE and _OVERRIDE_ACTIVE_NICHE.strip():
+        return _OVERRIDE_ACTIVE_NICHE.strip()
+
     env_niche = os.environ.get("NICHE")
     if env_niche and env_niche.strip():
         return env_niche.strip()
 
-    # 2. engine.config.json
     root = root_dir or find_project_root()
     config_file = root / "engine.config.json"
     if config_file.exists():
@@ -280,20 +294,7 @@ def load_niche(
     niche_id: Optional[str] = None,
     base_dir: Optional[Path] = None,
 ) -> NichePack:
-    """Load, validate, and return a NichePack.
-    
-    Args:
-        niche_id: The identifier for the niche pack. If None, resolves from
-                 NICHE environment variable or engine.config.json.
-        base_dir: The project root directory. If None, auto-detected.
-    
-    Returns:
-        A validated NichePack instance.
-    
-    Raises:
-        NicheValidationError: If the pack directory or niche.json is missing,
-                             or fails schema validation.
-    """
+    """Load, validate, and return a NichePack."""
     root = (base_dir or find_project_root()).resolve()
     target_id = niche_id or get_active_niche_id(root)
 
@@ -323,6 +324,11 @@ def load_niche(
         raise NicheValidationError(
             f"Failed to read {json_file}: {e}"
         ) from e
+
+    # Detect private pack conventions if isPrivate is not explicitly set
+    if "isPrivate" not in data:
+        if target_id.startswith("private-") or target_id.endswith("-private") :
+            data["isPrivate"] = True
 
     try:
         config = NicheConfig.model_validate(data)
@@ -358,6 +364,63 @@ def load_niche(
     )
 
 
+def list_available_niches(base_dir: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Scan the niches/ directory and list available packs with metadata."""
+    root = (base_dir or find_project_root()).resolve()
+    niches_root = root / "niches"
+    active_id = get_active_niche_id(root)
+    results = []
+
+    if not niches_root.exists():
+        return results
+
+    for item in sorted(niches_root.iterdir()):
+        if item.is_dir() and (item / "niche.json").exists():
+            try:
+                data = json.loads((item / "niche.json").read_text(encoding="utf-8"))
+                nid = data.get("id", item.name)
+                is_priv = bool(
+                    data.get("isPrivate")
+                    or nid.startswith("private-")
+                    or nid.endswith("-private")
+                    
+                )
+                results.append({
+                    "id": nid,
+                    "name": data.get("name", nid),
+                    "version": data.get("version", "1.0.0"),
+                    "description": data.get("description", ""),
+                    "isPrivate": is_priv,
+                    "isActive": (nid == active_id),
+                })
+            except Exception:
+                pass
+
+    return results
+
+
+def sanitize_niche_config_for_ui(config: NicheConfig) -> Dict[str, Any]:
+    """Strip secret keywords/internal examples if pack is private for secure UI consumption."""
+    raw = config.model_dump(by_alias=True)
+
+    # If pack is private, sanitize discovery tiers (remove secret keyword and example collections)
+    if config.isPrivate:
+        sanitized_tiers = []
+        for t in raw.get("discoveryTiers", []):
+            st = dict(t)
+            st_cats = []
+            for c in t.get("categories", []):
+                sc = dict(c)
+                sc["keywords"] = []  # sanitized
+                sc["examples"] = []  # sanitized
+                st_cats.append(sc)
+            st["categories"] = st_cats
+            sanitized_tiers.append(st)
+        raw["discoveryTiers"] = sanitized_tiers
+
+    return raw
+
+
 def render_prompt(template_str: str, variables: Dict[str, Any]) -> str:
     """Render a prompt template containing {{variable}} placeholders safely.
     
@@ -378,7 +441,6 @@ def render_prompt(template_str: str, variables: Dict[str, Any]) -> str:
         if placeholder in res:
             res = res.replace(placeholder, val_str)
         else:
-            # Fallback to regex for spacing variations e.g. {{  variable  }}
             pattern = re.compile(r"\{\{\s*" + re.escape(key) + r"\s*\}\}")
             res = pattern.sub(lambda _: val_str, res)
             

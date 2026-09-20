@@ -22,22 +22,23 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-asyncio pydantic httpx
+        pip install pytest pytest-asyncio pydantic httpx fastapi
 
     - name: Run Pytest Suite
       run: |
         python -m pytest tests/ -v
 
-    - name: CI Grep Check (Zero Niche Terms in engine/)
+    - name: CI Grep Check (Zero Niche Terms via engine/forbidden_terms.txt)
       run: |
         python -c "
         import pathlib, sys
-        forbidden = ['karma', 'ghost', 'theranos', 'madoff', 'supernatural', 'underdog']
+        terms_file = pathlib.Path('engine/forbidden_terms.txt')
+        forbidden = [line.strip().lower() for line in terms_file.read_text(encoding='utf-8').splitlines() if line.strip() and not line.startswith('#')]
         matches = [f'{p.name}: {word}' for p in pathlib.Path('engine').rglob('*.py') for word in forbidden if word in p.read_text(encoding='utf-8').lower()]
         if matches:
             print('CI Grep Check FAILED! Forbidden niche terms found in engine/:', file=sys.stderr)
             for m in matches:
                 print(f'  - {m}', file=sys.stderr)
             sys.exit(1)
-        print('CI Grep Check PASSED: 0 forbidden terms found in engine/.')
+        print(f'CI Grep Check PASSED: 0 forbidden terms found in engine/ (checked {len(forbidden)} terms).')
         "

@@ -11,6 +11,9 @@ from .niche_loader import (
     NicheValidationError,
     load_niche,
     render_prompt,
+    list_available_niches,
+    sanitize_niche_config_for_ui,
+    set_active_niche_override,
 )
 from .screening import (
     ScreeningResult,
@@ -28,6 +31,7 @@ from .llm import (
     complete as llm_complete,
     extract_json_object,
 )
+from .api import router as niche_api_router
 
 __all__ = [
     "NicheConfig",
@@ -36,6 +40,9 @@ __all__ = [
     "NicheValidationError",
     "load_niche",
     "render_prompt",
+    "list_available_niches",
+    "sanitize_niche_config_for_ui",
+    "set_active_niche_override",
     "ScreeningResult",
     "screen_story",
     "build_screening_prompt",
@@ -46,4 +53,5 @@ __all__ = [
     "estimate_duration_seconds",
     "llm_complete",
     "extract_json_object",
+    "niche_api_router",
 ]

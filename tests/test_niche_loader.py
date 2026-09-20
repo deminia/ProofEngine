@@ -7,7 +7,7 @@ Validates:
 5. Voice v1.1 override resolution per tier and category
 6. Prompt variable rendering (including safety against backreference injection)
 7. Prompt fallback to _template when a custom pack omits a prompt file
-8. Zero niche-specific strings inside engine/ code
+8. Zero niche-specific strings inside engine/ code (loaded from forbidden_terms.txt)
 """
 import os
 import json
@@ -82,15 +82,12 @@ def test_voice_v1_1_override_resolution(project_root):
     """Test v1.1 voice overrides: Tier G resolves to AdisornNeural."""
     pack = load_niche("karma-th", base_dir=project_root)
     
-    # Default tier S should resolve to primary PremwadeeNeural
     v_s = pack.config.voice.resolve_voice(tier_id="s")
     assert "Premwadee" in v_s.voiceId
     
-    # Tier G override should resolve to AdisornNeural
     v_g = pack.config.voice.resolve_voice(tier_id="g")
     assert "Adisorn" in v_g.voiceId
     
-    # Global language should resolve to ChristopherNeural
     v_global = pack.config.voice.resolve_voice(lang="global")
     assert "Christopher" in v_global.voiceId
 
@@ -109,10 +106,8 @@ def test_prompt_fallback_to_template(project_root, tmp_path):
     test_niches = test_root / "niches"
     test_niches.mkdir(parents=True)
     
-    # Copy _template to test repo
     shutil.copytree(project_root / "niches" / "_template", test_niches / "_template")
     
-    # Create custom pack that only has screening.md and script_primary.md, but omits script_global.md
     custom_pack_dir = test_niches / "custom-pack"
     custom_pack_dir.mkdir()
     (custom_pack_dir / "prompts").mkdir()
@@ -124,12 +119,10 @@ def test_prompt_fallback_to_template(project_root, tmp_path):
     
     (custom_pack_dir / "prompts" / "screening.md").write_text("Custom screening prompt", encoding="utf-8")
     (custom_pack_dir / "prompts" / "script_primary.md").write_text("Custom primary prompt", encoding="utf-8")
-    # Note: script_global.md is deliberately omitted!
     
     pack = load_niche("custom-pack", base_dir=test_root)
     assert pack.prompts.screening == "Custom screening prompt"
     assert pack.prompts.script_primary == "Custom primary prompt"
-    # Must fallback to template's script_global.md
     template_global = (test_niches / "_template" / "prompts" / "script_global.md").read_text(encoding="utf-8")
     assert pack.prompts.script_global == template_global
 
@@ -215,16 +208,20 @@ def test_prompt_rendering():
 def test_render_prompt_safe_against_backreferences():
     """Verify that variable content containing regex backreferences is safely replaced."""
     template = "Summary: {{summary}}"
-    # If using re.sub directly with string substitution, "\1" would raise an re.error
     variables = {"summary": "Look at \\1 and \\g<0> test symbols"}
     rendered = render_prompt(template, variables)
     assert "Look at \\1 and \\g<0> test symbols" in rendered
 
 
 def test_zero_niche_strings_in_engine(project_root):
-    """CI Acceptance Criteria: Zero niche-specific strings in engine/ directory."""
+    """CI Acceptance Criteria: Zero niche-specific strings in engine/ directory (reads forbidden_terms.txt)."""
     engine_dir = project_root / "engine"
-    forbidden_terms = ["karma", "ghost", "theranos", "madoff", "supernatural", "underdog"]
+    terms_file = engine_dir / "forbidden_terms.txt"
+    forbidden_terms = [
+        line.strip().lower()
+        for line in terms_file.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
     
     matches = []
     for py_file in engine_dir.rglob("*.py"):
