@@ -10,7 +10,7 @@ ProofEngine decouples video production infrastructure (story intake → AI scree
 - `niches/`: Data-driven niche packs.
   - `_template/`: Base template for creating new niches.
   - `example-finance/`: Worked example pack for personal finance & wealth building.
-  - `karma-th/`: Production pack for justice and karma documentaries.
+  - Custom / private packs: Drop any custom pack into `niches/<your-niche>/` (or `niches/private-*/` for gitignored proprietary packs).
 - `dashboard/`: React management UI rendered dynamically from the active niche pack.
 - `engine.config.json`: Global runtime settings and active niche selection.
 
@@ -42,3 +42,11 @@ $env:NICHE="example-finance"   # Windows PowerShell
 
 PolyForm Noncommercial License 1.0.0 — Copyright (c) 2026 Ranchaseth Jiraphimkun.
 Commercial licenses available upon request.
+
+---
+
+## 💼 Commercial Use
+
+ProofEngine is free for personal and non-commercial use.
+Want to use it for your agency, clients, or business?
+**Contact for commercial licensing: proofedge.ai@gmail.com**

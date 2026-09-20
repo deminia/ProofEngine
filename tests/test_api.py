@@ -29,6 +29,9 @@ def test_get_active_niche_sanitized():
 
 def test_private_pack_sanitization():
     """Verify that private packs have secret keywords/examples stripped."""
+    karma_path = Path(__file__).resolve().parent.parent / "niches" / "karma-th"
+    if not karma_path.exists():
+        pytest.skip("karma-th is a private pack not committed to public repo")
     # Switch to karma-th (private pack)
     switch_active_niche(SwitchNicheRequest(nicheId="karma-th"))
     data = get_active_niche()
@@ -65,7 +68,9 @@ def test_list_niches():
     ids = [p["id"] for p in packs]
     assert "example-finance" in ids
     assert "_template" in ids
-    assert "karma-th" in ids
+    karma_path = Path(__file__).resolve().parent.parent / "niches" / "karma-th"
+    if karma_path.exists():
+        assert "karma-th" in ids
     
     # Check active flag
     active_item = next(p for p in packs if p["isActive"])

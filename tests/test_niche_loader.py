@@ -44,8 +44,12 @@ def test_default_active_niche_is_example_finance(project_root, monkeypatch):
     assert pack.config.id == "example-finance"
 
 
+@pytest.mark.skipif(
+    not (Path(__file__).resolve().parent.parent / "niches" / "karma-th").exists(),
+    reason="karma-th is a private niche pack not committed to public repo",
+)
 def test_load_karma_th_pack(project_root):
-    """Test loading the primary karma-th production pack."""
+    """Test loading the primary karma-th production pack (local private dev only)."""
     pack = load_niche("karma-th", base_dir=project_root)
     assert pack.config.id == "karma-th"
     assert pack.config.name == "Karma & Justice Stories"
@@ -79,6 +83,10 @@ def test_load_karma_th_pack(project_root):
     assert "{{culturalNotes}}" in pack.prompts.script_global
 
 
+@pytest.mark.skipif(
+    not (Path(__file__).resolve().parent.parent / "niches" / "karma-th").exists(),
+    reason="karma-th is a private niche pack not committed to public repo",
+)
 def test_voice_v1_1_override_resolution(project_root):
     """Test v1.1 voice overrides: Tier G resolves to AdisornNeural."""
     pack = load_niche("karma-th", base_dir=project_root)
