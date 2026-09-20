@@ -1,0 +1,41 @@
+# ===========================================================================
+# ProofEngine .gitignore
+# ===========================================================================
+
+# 🚨 PRIVATE NICHE PACKS (SECRET SAUCE — NEVER COMMIT TO PUBLIC REPO)
+niches/karma-th/
+niches/private-*/
+niches/*-private/
+
+# Python & testing
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+token.json
+credentials.json
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

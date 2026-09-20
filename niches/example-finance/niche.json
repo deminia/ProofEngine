@@ -1,0 +1,315 @@
+{
+  "$schema": "https://proofengine.dev/schemas/niche-1.0.json",
+  "id": "example-finance",
+  "name": "Money Lessons & Market Traps",
+  "version": "1.0.0",
+  "author": "ProofEngine Contributors",
+  "license": "PolyForm Noncommercial 1.0.0",
+  "description": "Personal finance blunders, market bubbles, deceptive schemes, and wealth-building strategies.",
+  "languages": {
+    "primary": {
+      "code": "en",
+      "label": "English",
+      "enabled": true
+    },
+    "global": {
+      "code": "en",
+      "label": "English (Global)",
+      "enabled": true
+    }
+  },
+  "discoveryTiers": [
+    {
+      "id": "market_traps",
+      "label": "TIER 1 — Market Traps & Bubbles",
+      "emoji": "📉",
+      "priority": 1,
+      "categories": [
+        {
+          "id": "crypto_blowups",
+          "label": "Crypto & Token Blowups",
+          "emoji": "🪙",
+          "keywords": [
+            "crypto rug pull",
+            "token collapse",
+            "defi exploit",
+            "yield scam"
+          ],
+          "examples": [
+            "Terra Luna crash",
+            "FTX collapse",
+            "Celsius network bankruptcy"
+          ]
+        },
+        {
+          "id": "penny_stocks",
+          "label": "Pump & Dump Schemes",
+          "emoji": "📊",
+          "keywords": [
+            "penny stock pump",
+            "boiler room scam",
+            "insider stock dump"
+          ],
+          "examples": [
+            "Jordan Belfort Stratton Oakmont",
+            "Meme stock mania trap"
+          ]
+        },
+        {
+          "id": "real_estate_bubbles",
+          "label": "Real Estate Traps",
+          "emoji": "🏠",
+          "keywords": [
+            "subprime mortgage crisis",
+            "real estate bubble crash",
+            "overleveraged syndication"
+          ],
+          "examples": [
+            "2008 housing crash",
+            "China Evergrande default"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wealth_mindset",
+      "label": "TIER 2 — Wealth Mindset & Frugality",
+      "emoji": "💰",
+      "priority": 2,
+      "categories": [
+        {
+          "id": "compound_interest",
+          "label": "Compound Interest Wonders",
+          "emoji": "📈",
+          "keywords": [
+            "compound interest example",
+            "index fund millionaire",
+            "early retirement math"
+          ],
+          "examples": [
+            "Ronald Read janitor millionaire",
+            "Warren Buffett 90% wealth after 65"
+          ]
+        },
+        {
+          "id": "debt_payoff",
+          "label": "Extreme Debt Escapes",
+          "emoji": "⛓️",
+          "keywords": [
+            "debt snowball success",
+            "student loan payoff journey",
+            "credit card debt escape"
+          ],
+          "examples": [
+            "Couple pays off $150k debt in 3 years",
+            "Mortgage free at 35"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "career_business",
+      "label": "TIER 3 — Career & Business Pitfalls",
+      "emoji": "💼",
+      "priority": 3,
+      "categories": [
+        {
+          "id": "lifestyle_inflation",
+          "label": "High Earner, Not Rich Yet",
+          "emoji": "🏎️",
+          "keywords": [
+            "lifestyle creep traps",
+            "six figure broke",
+            "golden handcuffs"
+          ],
+          "examples": [
+            "NFL players going bankrupt",
+            "Doctor broke on 400k salary"
+          ]
+        },
+        {
+          "id": "bad_contracts",
+          "label": "Predatory Financial Contracts",
+          "emoji": "📑",
+          "keywords": [
+            "whole life insurance scam",
+            "predatory car loan 29 APR",
+            "timeshare trap"
+          ],
+          "examples": [
+            "84 month auto loan trap",
+            "Timeshare maintenance fee nightmare"
+          ]
+        }
+      ]
+    }
+  ],
+  "screening": {
+    "scoreRange": [
+      0,
+      10
+    ],
+    "autoApproveThreshold": 7.0,
+    "criteria": [
+      {
+        "id": "financial-lesson",
+        "weight": 0.35,
+        "description": "Clear, actionable personal finance or wealth takeaway that viewers can apply."
+      },
+      {
+        "id": "shock-contrast",
+        "weight": 0.25,
+        "description": "High contrast between expectation and reality (e.g. huge wealth lost or tiny savings compounded)."
+      },
+      {
+        "id": "retention-pacing",
+        "weight": 0.25,
+        "description": "Numbers and story momentum keep viewers watching through the full breakdown."
+      },
+      {
+        "id": "visual-clarity",
+        "weight": 0.15,
+        "description": "Clear concepts suitable for financial charts, stock footage, and typography chyrons."
+      }
+    ],
+    "hardRejectRules": [
+      "unregulated financial advice or guaranteed return claims",
+      "promotion of active crypto tokens or specific meme stocks",
+      "get-rich-quick scams or predatory courses"
+    ]
+  },
+  "storyBeats": [
+    {
+      "id": "hook",
+      "label": "HOOK",
+      "targetSeconds": [
+        0,
+        3
+      ],
+      "description": "Shocking financial statistic or contrasting dollar amounts to stop the scroll."
+    },
+    {
+      "id": "setup",
+      "label": "THE PROMISE / SETUP",
+      "targetSeconds": [
+        3,
+        12
+      ],
+      "description": "How the person got into the deal, investment, or mindset."
+    },
+    {
+      "id": "breakdown",
+      "label": "THE TRAP / BREAKDOWN",
+      "targetSeconds": [
+        12,
+        26
+      ],
+      "description": "What went wrong behind the scenes — fees, leverage, deceit, or greed."
+    },
+    {
+      "id": "impact",
+      "label": "THE NUMERICAL IMPACT",
+      "targetSeconds": [
+        26,
+        42
+      ],
+      "description": "The exact dollars lost or gained, translated into relatable terms."
+    },
+    {
+      "id": "lesson",
+      "label": "THE WEALTH LESSON",
+      "targetSeconds": [
+        42,
+        52
+      ],
+      "description": "The golden rule: index funds, emergency fund, avoiding leverage, or reading fine print."
+    },
+    {
+      "id": "cta",
+      "label": "CTA",
+      "targetSeconds": [
+        52,
+        60
+      ],
+      "description": "1-Action question: 'Would you take this risk or play it safe? Drop your answer below.'"
+    }
+  ],
+  "voice": {
+    "provider": "edge-tts",
+    "primary": {
+      "voiceId": "en-US-ChristopherNeural",
+      "rate": "+2%",
+      "pitch": "+0Hz",
+      "style": null
+    },
+    "global": {
+      "voiceId": "en-US-ChristopherNeural",
+      "rate": "+2%",
+      "pitch": "+0Hz",
+      "style": null
+    },
+    "overrides": []
+  },
+  "visual": {
+    "footageProviders": [
+      "pexels",
+      "wikimedia",
+      "local_upload"
+    ],
+    "keywordLanguage": "en",
+    "captionStyle": {
+      "font": "default",
+      "position": "bottom",
+      "highlightColor": "#22c55e"
+    },
+    "aspectRatio": "9:16",
+    "resolution": "1080x1920",
+    "durationSeconds": [
+      45,
+      60
+    ]
+  },
+  "social": {
+    "hashtags": {
+      "primary": [
+        "#finance",
+        "#moneytips",
+        "#investing",
+        "#wealth",
+        "#personalfinance"
+      ],
+      "global": [
+        "#finance",
+        "#moneytips",
+        "#investing",
+        "#wealth",
+        "#financialfreedom"
+      ]
+    },
+    "captionTemplates": {
+      "tiktok": "{{title}} {{hashtags}}",
+      "youtube": "{{title}}\n\n{{description}}\n\n{{hashtags}}",
+      "facebook": "{{title}}\n\n{{description}}",
+      "x_thread": "{{title}} (1/5)\n\n{{hashtags}}",
+      "instagram": "{{title}}\n.\n.\n{{description}}\n.\n{{hashtags}}"
+    },
+    "affiliateLink": null,
+    "factCheckDisclaimer": "For educational purposes only. Not financial or investment advice."
+  },
+  "publishing": {
+    "platforms": [
+      "tiktok",
+      "youtube",
+      "instagram",
+      "facebook",
+      "x"
+    ],
+    "defaultSchedule": {
+      "times": [
+        "08:00",
+        "18:00"
+      ],
+      "timezone": "America/New_York"
+    }
+  }
+}

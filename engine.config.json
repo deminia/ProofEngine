@@ -1,0 +1,7 @@
+{
+  "$schema": "https://proofengine.dev/schemas/engine-config-1.0.json",
+  "activeNiche": "example-finance",
+  "nichesDir": "niches",
+  "fallbackNiche": "_template",
+  "version": "1.1.0"
+}

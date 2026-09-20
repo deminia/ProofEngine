@@ -1,0 +1,194 @@
+{
+  "$schema": "https://proofengine.dev/schemas/niche-1.0.json",
+  "id": "_template",
+  "name": "Template Niche Pack",
+  "version": "1.0.0",
+  "author": "ProofEngine Contributors",
+  "license": "PolyForm Noncommercial 1.0.0",
+  "description": "Starter niche pack template. Copy this directory to create a new niche pack.",
+  "languages": {
+    "primary": {
+      "code": "en",
+      "label": "English",
+      "enabled": true
+    },
+    "global": {
+      "code": "en",
+      "label": "English (Global)",
+      "enabled": true
+    }
+  },
+  "discoveryTiers": [
+    {
+      "id": "tier_1",
+      "label": "TIER 1 — Core Stories",
+      "emoji": "🔥",
+      "priority": 1,
+      "categories": [
+        {
+          "id": "sample_category",
+          "label": "Sample Category",
+          "emoji": "💡",
+          "keywords": [
+            "sample keyword 1",
+            "sample keyword 2"
+          ],
+          "examples": [
+            "Example Case A",
+            "Example Case B"
+          ]
+        }
+      ]
+    }
+  ],
+  "screening": {
+    "scoreRange": [
+      0,
+      10
+    ],
+    "autoApproveThreshold": 7.0,
+    "criteria": [
+      {
+        "id": "topic-relevance",
+        "weight": 0.4,
+        "description": "Relevance to the specific niche topic and audience interest."
+      },
+      {
+        "id": "emotional-hook",
+        "weight": 0.3,
+        "description": "Immediate hook in the first 3 seconds that captures attention."
+      },
+      {
+        "id": "visual-appeal",
+        "weight": 0.3,
+        "description": "Ease of finding compelling stock footage or public images."
+      }
+    ],
+    "hardRejectRules": [
+      "graphic violence",
+      "hate speech",
+      "copyright infringement risk"
+    ]
+  },
+  "storyBeats": [
+    {
+      "id": "hook",
+      "label": "HOOK",
+      "targetSeconds": [
+        0,
+        3
+      ],
+      "description": "Grab attention immediately with a question, shocker, or contrarian fact."
+    },
+    {
+      "id": "setup",
+      "label": "SETUP",
+      "targetSeconds": [
+        3,
+        15
+      ],
+      "description": "Introduce the context and main character or topic."
+    },
+    {
+      "id": "twist",
+      "label": "CONFLICT / TWIST",
+      "targetSeconds": [
+        15,
+        35
+      ],
+      "description": "The dramatic event, revelation, or breakdown."
+    },
+    {
+      "id": "takeaway",
+      "label": "RESOLUTION / LESSON",
+      "targetSeconds": [
+        35,
+        52
+      ],
+      "description": "The outcome, payoff, or core insight."
+    },
+    {
+      "id": "cta",
+      "label": "CTA",
+      "targetSeconds": [
+        52,
+        60
+      ],
+      "description": "Call to action asking a single, punchy question in the comments."
+    }
+  ],
+  "voice": {
+    "provider": "edge-tts",
+    "primary": {
+      "voiceId": "en-US-ChristopherNeural",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "style": null
+    },
+    "global": {
+      "voiceId": "en-US-ChristopherNeural",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "style": null
+    },
+    "overrides": []
+  },
+  "visual": {
+    "footageProviders": [
+      "pexels",
+      "local_upload"
+    ],
+    "keywordLanguage": "en",
+    "captionStyle": {
+      "font": "default",
+      "position": "bottom",
+      "highlightColor": "#facc15"
+    },
+    "aspectRatio": "9:16",
+    "resolution": "1080x1920",
+    "durationSeconds": [
+      45,
+      60
+    ]
+  },
+  "social": {
+    "hashtags": {
+      "primary": [
+        "#shorts",
+        "#viral",
+        "#story"
+      ],
+      "global": [
+        "#shorts",
+        "#viral",
+        "#story"
+      ]
+    },
+    "captionTemplates": {
+      "tiktok": "{{title}} {{hashtags}}",
+      "youtube": "{{title}}\n\n{{description}}\n\n{{hashtags}}",
+      "facebook": "{{title}}\n\n{{description}}",
+      "x_thread": "{{title}} (1/5)\n\n{{hashtags}}",
+      "instagram": "{{title}}\n.\n.\n{{description}}\n.\n{{hashtags}}"
+    },
+    "affiliateLink": null,
+    "factCheckDisclaimer": "Content curated from public information. Always verify independently."
+  },
+  "publishing": {
+    "platforms": [
+      "tiktok",
+      "youtube",
+      "instagram",
+      "facebook",
+      "shopee",
+      "x"
+    ],
+    "defaultSchedule": {
+      "times": [
+        "12:00",
+        "19:00"
+      ],
+      "timezone": "UTC"
+    }
+  }
+}
