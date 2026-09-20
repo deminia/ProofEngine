@@ -108,6 +108,23 @@ def build_srt_subtitles(
     return str(out_p.resolve())
 
 
+def sanitize_ass_text(text: str) -> str:
+    """Sanitize subtitle text for safe rendering in ASS format without syntax errors.
+    
+    Escapes/replaces characters that would otherwise be parsed as ASS style override tags
+    or control sequences, ensuring clean display of user content with special characters.
+    """
+    if not text:
+        return ""
+    # 1. Normalize linebreaks and whitespace
+    t = text.replace("\r\n", " ").replace("\n", " ").replace("\t", " ")
+    # 2. In ASS, backslash is an escape character (\N, \h, etc.). Replace literal backslash with forward slash
+    t = t.replace("\\", "/")
+    # 3. In ASS, { and } delimit override tags like {\\b1}. Replace with parentheses so text is rendered visibly
+    t = t.replace("{", "(").replace("}", ")")
+    return t.strip()
+
+
 def build_ass_subtitles(
     script_text: str,
     total_duration: float,
@@ -147,7 +164,7 @@ def build_ass_subtitles(
         start_str = format_ass_time(cur_time)
         end_str = format_ass_time(end_time)
 
-        cue_clean = cue.replace("{", "\\{").replace("}", "\\}").strip()
+        cue_clean = sanitize_ass_text(cue)
         events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0,0,0,,{cue_clean}")
         cur_time = end_time
 
