@@ -28,17 +28,34 @@ jobs:
       run: |
         python -m pytest tests/ -v
 
-    - name: CI Grep Check (Zero Niche Terms via engine/forbidden_terms.txt)
+    - name: CI Grep Check (Zero Niche Terms in engine/ and dashboard/src/)
       run: |
         python -c "
         import pathlib, sys
         terms_file = pathlib.Path('engine/forbidden_terms.txt')
         forbidden = [line.strip().lower() for line in terms_file.read_text(encoding='utf-8').splitlines() if line.strip() and not line.startswith('#')]
-        matches = [f'{p.name}: {word}' for p in pathlib.Path('engine').rglob('*.py') for word in forbidden if word in p.read_text(encoding='utf-8').lower()]
+        
+        matches = []
+        # Check engine
+        for p in pathlib.Path('engine').rglob('*.py'):
+            for word in forbidden:
+                if word in p.read_text(encoding='utf-8', errors='ignore').lower():
+                    matches.append(f'{p}: {word}')
+                    
+        # Check dashboard/src if present
+        dash_src = pathlib.Path('dashboard/src')
+        if dash_src.exists():
+            for p in dash_src.rglob('*'):
+                if p.is_file() and p.suffix in ('.js', '.jsx', '.ts', '.tsx', '.css', '.html'):
+                    text = p.read_text(encoding='utf-8', errors='ignore').lower()
+                    for word in forbidden:
+                        if word in text:
+                            matches.append(f'{p}: {word}')
+
         if matches:
-            print('CI Grep Check FAILED! Forbidden niche terms found in engine/:', file=sys.stderr)
+            print('CI Grep Check FAILED! Forbidden niche terms found:', file=sys.stderr)
             for m in matches:
                 print(f'  - {m}', file=sys.stderr)
             sys.exit(1)
-        print(f'CI Grep Check PASSED: 0 forbidden terms found in engine/ (checked {len(forbidden)} terms).')
+        print(f'CI Grep Check PASSED: 0 forbidden terms found in engine/ and dashboard/src/ (checked {len(forbidden)} terms).')
         "

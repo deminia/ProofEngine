@@ -231,3 +231,26 @@ def test_zero_niche_strings_in_engine(project_root):
                 matches.append(f"{py_file.name} contains forbidden niche term: '{term}'")
                 
     assert not matches, "\n".join(matches)
+
+
+def test_zero_niche_strings_in_dashboard_src(project_root):
+    """CI Acceptance Criteria: Zero niche-specific strings in dashboard/src/ directory."""
+    dashboard_src = project_root / "dashboard" / "src"
+    if not dashboard_src.exists():
+        return
+    terms_file = project_root / "engine" / "forbidden_terms.txt"
+    forbidden_terms = [
+        line.strip().lower()
+        for line in terms_file.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+    
+    matches = []
+    for p in dashboard_src.rglob("*"):
+        if p.is_file() and p.suffix in (".js", ".jsx", ".ts", ".tsx", ".css", ".html"):
+            text = p.read_text(encoding="utf-8", errors="ignore").lower()
+            for term in forbidden_terms:
+                if term in text:
+                    matches.append(f"{p.name} contains forbidden niche term: '{term}'")
+                    
+    assert not matches, "\n".join(matches)
