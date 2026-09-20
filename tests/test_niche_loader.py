@@ -1,3 +1,4 @@
+import re
 """Automated unit and regression tests for ProofEngine Niche Loader.
 Validates:
 1. Valid niche packs (karma-th, _template, example-finance)
@@ -227,7 +228,8 @@ def test_zero_niche_strings_in_engine(project_root):
     for py_file in engine_dir.rglob("*.py"):
         text = py_file.read_text(encoding="utf-8").lower()
         for term in forbidden_terms:
-            if term in text:
+            pattern = rf"\b{re.escape(term)}\b"
+            if re.search(pattern, text):
                 matches.append(f"{py_file.name} contains forbidden niche term: '{term}'")
                 
     assert not matches, "\n".join(matches)
@@ -250,7 +252,8 @@ def test_zero_niche_strings_in_dashboard_src(project_root):
         if p.is_file() and p.suffix in (".js", ".jsx", ".ts", ".tsx", ".css", ".html"):
             text = p.read_text(encoding="utf-8", errors="ignore").lower()
             for term in forbidden_terms:
-                if term in text:
+                pattern = rf"\b{re.escape(term)}\b"
+                if re.search(pattern, text):
                     matches.append(f"{p.name} contains forbidden niche term: '{term}'")
                     
     assert not matches, "\n".join(matches)

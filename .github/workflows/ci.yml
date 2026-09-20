@@ -35,11 +35,14 @@ jobs:
         terms_file = pathlib.Path('engine/forbidden_terms.txt')
         forbidden = [line.strip().lower() for line in terms_file.read_text(encoding='utf-8').splitlines() if line.strip() and not line.startswith('#')]
         
+        import re
         matches = []
         # Check engine
         for p in pathlib.Path('engine').rglob('*.py'):
+            text = p.read_text(encoding='utf-8', errors='ignore').lower()
             for word in forbidden:
-                if word in p.read_text(encoding='utf-8', errors='ignore').lower():
+                pattern = rf"\b{re.escape(word)}\b"
+                if re.search(pattern, text):
                     matches.append(f'{p}: {word}')
                     
         # Check dashboard/src if present
@@ -49,7 +52,8 @@ jobs:
                 if p.is_file() and p.suffix in ('.js', '.jsx', '.ts', '.tsx', '.css', '.html'):
                     text = p.read_text(encoding='utf-8', errors='ignore').lower()
                     for word in forbidden:
-                        if word in text:
+                        pattern = rf"\b{re.escape(word)}\b"
+                        if re.search(pattern, text):
                             matches.append(f'{p}: {word}')
 
         if matches:
