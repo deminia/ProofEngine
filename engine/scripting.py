@@ -154,13 +154,19 @@ def adapt_to_global(
     script_body: str,
     pack: Optional[NichePack] = None,
     cultural_notes: str = "",
+    target_duration: Optional[int] = None,
     llm_complete: Optional[Callable[[str], str]] = None,
 ) -> str:
-    """Adapt primary script into global language using prompts.script_global."""
+    """Adapt primary script into global language using prompts.script_global with duration guard."""
     niche = pack or load_niche()
+    min_dur, max_dur = niche.config.visual.durationSeconds
+    target_sec = target_duration or max_dur
+
     variables = {
         "script": script_body,
         "culturalNotes": cultural_notes or "(Maintain documentary realism and pacing)",
+        "duration": f"{min_dur}-{max_dur}",
+        "maxSeconds": str(target_sec),
     }
     prompt = render_prompt(niche.prompts.script_global, variables)
     complete_fn = llm_complete or (lambda p: default_llm_complete(p, task="script"))
@@ -170,4 +176,24 @@ def adapt_to_global(
     for fence in ('"""', "```"):
         if adapted.startswith(fence) and adapted.endswith(fence):
             adapted = adapted[len(fence):-len(fence)].strip()
+
+    # Post-check duration guard: if exceeding max * 1.1, execute auto-condense pass
+    est_dur = estimate_duration_seconds(adapted)
+    if est_dur > target_sec * 1.1:
+        log.warning(
+            "Adapted script duration (%.1fs) exceeded threshold (%.1fs). Running second condensation pass.",
+            est_dur,
+            target_sec,
+        )
+        condense_prompt = (
+            f"Condense the following short video narration so it speaks in strictly under {target_sec} seconds. "
+            f"Preserve all story beats, contrast, and stakes without rushing:\n\n{adapted}"
+        )
+        condensed = complete_fn(condense_prompt).strip()
+        for fence in ('"""', "```"):
+            if condensed.startswith(fence) and condensed.endswith(fence):
+                condensed = condensed[len(fence):-len(fence)].strip()
+        if condensed:
+            adapted = condensed
+
     return adapted

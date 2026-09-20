@@ -39,3 +39,8 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+output/
+stock_cache/
+*.mp4
+*.mp3
