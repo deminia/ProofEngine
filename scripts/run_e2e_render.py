@@ -94,7 +94,16 @@ def main():
     audio_path = output_dir / "smoke_test_finance.mp3"
     tts_provider = EdgeTTSProvider()
     print(f"Synthesizing voice narration with {resolved_voice.voiceId}...")
-    audio_res = synthesize_voice(script, str(audio_path), provider=tts_provider)
+    max_dur = float(pack.config.visual.durationSeconds[1])
+    print(f"Enforcing Layer 2 Duration Guard: target max <= {max_dur}s (threshold <= {max_dur * 1.05}s)")
+    audio_res = synthesize_voice(
+        script,
+        str(audio_path),
+        provider=tts_provider,
+        max_duration_seconds=max_dur,
+    )
+    print(f"[OK] Audio generated: {audio_res.audio_path} ({audio_res.duration_seconds}s)")
+    print(f"Final Script Body ({len(script.body.split())} words):\n{script.body}")
     print(f"[OK] Audio generated: {audio_res.audio_path} ({audio_res.duration_seconds}s)")
 
     # 3. Assemble Full Video via FFmpeg

@@ -34,26 +34,36 @@ class ScriptResult(BaseModel):
     estimated_duration: float = Field(..., description="Calculated duration from word/syllable count")
 
 
-def estimate_duration_seconds(body_text: str, words_per_second: float = 3.2) -> float:
-    """Estimate spoken audio duration based on language characteristics.
+def estimate_duration_seconds(
+    body_text: str,
+    words_per_second: Optional[float] = None,
+    chars_per_second: Optional[float] = None,
+    voice_settings: Optional[VoiceSettings] = None,
+) -> float:
+    """Estimate spoken audio duration calibrated against realistic TTS delivery.
     
-    Supports both spaced languages (English, etc.) and non-spaced languages
-    such as Thai, using character pacing benchmarks (~11.5 characters/sec in Thai).
+    Calibrated Pacing:
+    - Spaced languages (English, Spanish): ~2.0 - 2.1 words per second (~120-130 WPM)
+      for short-form narrative pacing with sentence/clause pauses.
+    - Non-spaced languages (Thai, etc.): ~11.5 - 12.0 characters per second.
+    - Honors explicit `wordsPerSecond` or `charsPerSecond` on `voice_settings` if configured.
     """
     if not body_text or not body_text.strip():
         return 0.0
 
     cleaned = body_text.strip()
+    wps = words_per_second or (voice_settings.wordsPerSecond if voice_settings else None) or 2.1
+    cps = chars_per_second or (voice_settings.charsPerSecond if voice_settings else None) or 11.5
+
     # Check if text contains Thai Unicode characters (0x0E00 - 0x0E7F)
     thai_chars = re.findall(r"[\u0e00-\u0e7f]", cleaned)
     if len(thai_chars) > len(cleaned) * 0.3:
-        # In Thai, fast short-form narration is ~11.0 to 12.5 characters per second
         non_space_chars = len(re.sub(r"\s+", "", cleaned))
-        return round(non_space_chars / 11.5, 1)
+        return round(non_space_chars / cps, 1)
 
     # Standard spaced languages (English, Spanish, etc.)
     words = len(cleaned.split())
-    return round(words / words_per_second, 1)
+    return round(words / wps, 1)
 
 
 def build_script_prompt(
@@ -178,7 +188,8 @@ def adapt_to_global(
             adapted = adapted[len(fence):-len(fence)].strip()
 
     # Post-check duration guard: if exceeding max * 1.1, execute auto-condense pass
-    est_dur = estimate_duration_seconds(adapted)
+    voice_global = niche.config.voice.resolve_voice(lang="global")
+    est_dur = estimate_duration_seconds(adapted, voice_settings=voice_global)
     if est_dur > target_sec * 1.1:
         log.warning(
             "Adapted script duration (%.1fs) exceeded threshold (%.1fs). Running second condensation pass.",

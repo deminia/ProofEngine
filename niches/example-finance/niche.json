@@ -240,13 +240,17 @@
       "voiceId": "en-US-ChristopherNeural",
       "rate": "+2%",
       "pitch": "+0Hz",
-      "style": null
+      "style": null,
+      "wordsPerSecond": 2.1,
+      "charsPerSecond": 12.0
     },
     "global": {
       "voiceId": "en-US-ChristopherNeural",
       "rate": "+2%",
       "pitch": "+0Hz",
-      "style": null
+      "style": null,
+      "wordsPerSecond": 2.1,
+      "charsPerSecond": 12.0
     },
     "overrides": []
   },

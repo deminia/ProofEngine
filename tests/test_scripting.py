@@ -96,11 +96,15 @@ def test_adapt_to_global(project_root):
 
 
 def test_estimate_duration_seconds():
-    """Verify word-count-based duration estimation."""
+    """Verify calibrated word-count and character-based duration estimation."""
     text = "one two three four five six seven eight nine ten"
-    # 10 words / 3.2 wps ≈ 3.1 seconds
-    est = estimate_duration_seconds(text, words_per_second=3.2)
-    assert 2.5 <= est <= 3.5
+    # 10 words at calibrated default 2.1 wps ≈ 4.8 seconds
+    est = estimate_duration_seconds(text)
+    assert 4.0 <= est <= 5.5
+
+    # Explicit words_per_second override
+    est_custom = estimate_duration_seconds(text, words_per_second=3.2)
+    assert 2.5 <= est_custom <= 3.5
 
 
 def test_zero_niche_strings_in_scripting(project_root):

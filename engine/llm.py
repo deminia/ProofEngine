@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from pathlib import Path
 import re
 from typing import Any, Dict, Optional
 
@@ -43,6 +44,18 @@ def extract_json_object(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _load_env_if_needed() -> None:
+    """Load .env from project root if keys are not already in environment."""
+    if not os.environ.get("OPENROUTER_API_KEY") and not os.environ.get("ANTHROPIC_API_KEY"):
+        env_p = Path(__file__).resolve().parent.parent / ".env"
+        if env_p.exists():
+            for line in env_p.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+
+
 def complete(
     prompt: str,
     task: Optional[str] = None,
@@ -57,8 +70,9 @@ def complete(
     1. Direct arguments (provider, model)
     2. Environment variables: LLM_<TASK> -> LLM_PROVIDER / LLM_MODEL
     """
+    _load_env_if_needed()
     prov = (provider or os.environ.get(f"LLM_{task.upper()}_PROVIDER", "") or os.environ.get("LLM_PROVIDER", "openrouter")).lower()
-    mod = model or os.environ.get(f"LLM_{task.upper()}_MODEL", "") or os.environ.get("LLM_MODEL", "")
+    mod = model or os.environ.get(f"LLM_{task.upper()}_MODEL", "") or os.environ.get("LLM_MODEL", "") or os.environ.get("OPENROUTER_MODEL", "") or "google/gemini-2.5-flash-lite"
 
     # For testing or stubbed execution without keys:
     if os.environ.get("MOCK_LLM_RESPONSE"):
@@ -87,7 +101,7 @@ def complete(
             "X-Title": "ProofEngine",
         }
         payload = {
-            "model": mod or "google/gemini-2.0-flash-lite-preview-02-05:free",
+            "model": mod or "google/gemini-2.5-flash-lite",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
             "max_tokens": max_tokens,

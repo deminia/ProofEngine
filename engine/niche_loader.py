@@ -103,6 +103,8 @@ class VoiceSettings(BaseModel):
     rate: str = "+0%"
     pitch: str = "+0Hz"
     style: Optional[str] = None
+    charsPerSecond: Optional[float] = None
+    wordsPerSecond: Optional[float] = None
 
 
 class VoiceOverride(BaseModel):
@@ -113,6 +115,8 @@ class VoiceOverride(BaseModel):
     rate: str = "+0%"
     pitch: str = "+0Hz"
     style: Optional[str] = None
+    charsPerSecond: Optional[float] = None
+    wordsPerSecond: Optional[float] = None
 
 
 class VoiceConfig(BaseModel):
@@ -138,10 +142,24 @@ class VoiceConfig(BaseModel):
         # Check overrides in order of specificity (category first, then tier)
         for ov in self.overrides:
             if ov.matchCategory and category_id and ov.matchCategory.lower() == category_id.lower():
-                return VoiceSettings(voiceId=ov.voiceId, rate=ov.rate, pitch=ov.pitch, style=ov.style)
+                return VoiceSettings(
+                    voiceId=ov.voiceId,
+                    rate=ov.rate,
+                    pitch=ov.pitch,
+                    style=ov.style,
+                    charsPerSecond=ov.charsPerSecond or base.charsPerSecond,
+                    wordsPerSecond=ov.wordsPerSecond or base.wordsPerSecond,
+                )
         for ov in self.overrides:
             if ov.matchTier and tier_id and ov.matchTier.lower() == tier_id.lower():
-                return VoiceSettings(voiceId=ov.voiceId, rate=ov.rate, pitch=ov.pitch, style=ov.style)
+                return VoiceSettings(
+                    voiceId=ov.voiceId,
+                    rate=ov.rate,
+                    pitch=ov.pitch,
+                    style=ov.style,
+                    charsPerSecond=ov.charsPerSecond or base.charsPerSecond,
+                    wordsPerSecond=ov.wordsPerSecond or base.wordsPerSecond,
+                )
 
         return base
 
