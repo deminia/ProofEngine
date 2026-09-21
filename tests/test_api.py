@@ -77,11 +77,11 @@ def test_list_niches():
     assert active_item is not None
 
 
-def test_zero_niche_strings_in_api():
+def test_zero_niche_strings_in_api(project_root):
     """Ensure engine/api.py has zero hardcoded niche terms."""
-    p = Path("D:/Demini/ProofEngine/engine/api.py")
+    p = project_root / "engine" / "api.py"
     text = p.read_text(encoding="utf-8").lower()
-    terms_file = Path("D:/Demini/ProofEngine/engine/forbidden_terms.txt")
+    terms_file = project_root / "engine" / "forbidden_terms.txt"
     forbidden = [line.strip() for line in terms_file.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
     for term in forbidden:
         assert term not in text, f"engine/api.py contains forbidden term: {term}"

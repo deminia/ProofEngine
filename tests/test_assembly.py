@@ -1,5 +1,6 @@
 """Tests for engine/assembly.py (Video Assembly Engine)."""
 import pytest
+import shutil
 import subprocess
 from pathlib import Path
 from engine.assembly import (
@@ -42,6 +43,7 @@ def test_sanitize_ass_text_special_characters():
     assert "—" in sanitized
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg is required for this test")
 def test_build_ass_subtitles_with_special_characters_and_ffmpeg_render(tmp_path):
     """Verify ASS subtitles with tricky characters render cleanly in FFmpeg without syntax errors."""
     ass_out = tmp_path / "test_special.ass"
@@ -74,6 +76,7 @@ def test_build_ass_subtitles_with_special_characters_and_ffmpeg_render(tmp_path)
     assert proc.returncode == 0, f"FFmpeg failed to parse ASS with special characters: {proc.stderr}"
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg is required for this test")
 def test_generate_motion_placeholder(tmp_path):
     clip_out = tmp_path / "placeholder.mp4"
     clip = generate_motion_placeholder(str(clip_out), duration=2.0)
@@ -83,6 +86,7 @@ def test_generate_motion_placeholder(tmp_path):
     assert Path(clip.file_path).stat().st_size > 5000
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg is required for this test")
 def test_acquire_footage_sequence_fallback_when_no_api_key(tmp_path):
     keywords = ["chart plunging", "trader stressed", "empty account"]
     clips = acquire_footage_sequence(
@@ -97,6 +101,7 @@ def test_acquire_footage_sequence_fallback_when_no_api_key(tmp_path):
         assert Path(c.file_path).exists()
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg is required for this test")
 def test_acquire_footage_sequence_handles_unfindable_keywords_without_crashing(tmp_path, monkeypatch):
     """Verify that even with an API key, unfindable queries broaden or fallback to placeholder without crashing."""
     from engine import assembly
