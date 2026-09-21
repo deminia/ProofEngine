@@ -7,6 +7,12 @@ niches/karma-th/
 niches/private-*/
 niches/*-private/
 
+# 🔒 INTERNAL STRATEGY & BUSINESS PLANS (CONFIDENTIAL)
+docs/monetization-strategy.md
+docs/internal/
+docs/*-internal*
+docs/*monetization*
+
 # Python & testing
 __pycache__/
 *.py[cod]
