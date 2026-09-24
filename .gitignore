@@ -2,10 +2,14 @@
 # ProofEngine .gitignore
 # ===========================================================================
 
-# 🚨 PRIVATE NICHE PACKS (SECRET SAUCE — NEVER COMMIT TO PUBLIC REPO)
+# 🚨 PRIVATE NICHE PACKS & TOOLS (SECRET SAUCE — NEVER COMMIT TO PUBLIC REPO)
 niches/karma-th/
+niches/tech-history/
 niches/private-*/
 niches/*-private/
+# private: seller-side render tool ของสินค้า
+scripts/render_tech_history.py
+
 
 # 🔒 INTERNAL STRATEGY & BUSINESS PLANS (CONFIDENTIAL)
 docs/monetization-strategy.md
