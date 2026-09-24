@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, BASE, API_KEY } from "../api";
 import { toast } from "../components/Toast.jsx";
 import { Dropdown } from "../components/Dropdown.jsx";
+import { useNiche } from "../context/NicheContext.jsx";
 
 function kwToText(json) {
   if (!json) return "";

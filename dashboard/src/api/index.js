@@ -76,4 +76,34 @@ export const api = {
   // settings
   getSettings: () => j(`/settings`),
   patchSettings: (payload) => j(`/settings`, { method: "PATCH", body: JSON.stringify(payload) }),
+
+  // analytics
+  analytics: () => j(`/analytics`),
+  refreshAnalytics: () => j(`/analytics/refresh`, { method: "POST" }),
+
+  // assets
+  getAssetTree: () => j(`/assets/tree`),
+  browseAssets: (path = "") => j(`/assets/browse?path=${encodeURIComponent(path)}`),
+  uploadAsset: (dest, file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const headers = {};
+    if (API_KEY) headers["X-API-Key"] = API_KEY;
+    return fetch(`${BASE}/assets/upload?dest=${encodeURIComponent(dest)}`, { method: "POST", headers, body: fd })
+      .then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); });
+  },
+  deleteAsset: (path) => j(`/assets/delete?path=${encodeURIComponent(path)}`, { method: "DELETE" }),
+
+  // prompts
+  getPrompts: () => j(`/prompts`),
+  getPrompt: (key) => j(`/prompts/${key}`),
+  patchPrompt: (key, prompt) => j(`/prompts/${key}`, { method: "PATCH", body: JSON.stringify({ prompt }) }),
+  resetPrompt: (key) => j(`/prompts/${key}/reset`, { method: "POST" }),
+
+  // system
+  getSystemHealth: () => j(`/system/health`),
+  getSystemTasks: () => j(`/system/tasks`),
+  getSystemStats: () => j(`/system/stats`),
+  getSystemLogs: (lines = 100) => j(`/system/logs?lines=${lines}`),
 };
+

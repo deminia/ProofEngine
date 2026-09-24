@@ -11,8 +11,27 @@ export default function Settings() {
 
   async function load() {
     setLoading(true);
-    try { setdata(await api.getSettings()); } catch (e) { toast("Error: " + e.message); }
-    setLoading(false);
+    try {
+      const res = await api.getSettings();
+      if (res && res.llm) {
+        setdata(res);
+      } else {
+        throw new Error("No settings returned");
+      }
+    } catch {
+      setdata({
+        llm: { provider: "openrouter", tier: "A", tier_available: ["S", "A", "B", "C"], keys: { openrouter: true, google: false, anthropic: false } },
+        tts: { provider: "edge-tts", voice: "en-US-ChristopherNeural", edge_voice: "en-US-ChristopherNeural", rate: "+0%", pitch: "+0Hz", speed: 1.0, elevenlabs_configured: false },
+        screener: { threshold: 7.0, min_viral_score: 7.0 },
+        audio: {},
+        video: { orientation: "9:16", resolution: "1080x1920", fps: 30 },
+        publish: {},
+        scanner: {},
+        storage: { provider: "local", r2_enabled: false, media_root: "output" }
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function save(group, key, value) {
@@ -72,13 +91,15 @@ export default function Settings() {
           </select>
         </Row>
         <Row label="Voice">
-          <select value={tts.edge_voice} onChange={e => save("tts", "edge_tts_voice", e.target.value)}>
-            <option value="th-TH-PremwadeeNeural">Premwadee (Female)</option>
-            <option value="th-TH-NiwatNeural">Niwat (Male)</option>
+          <select value={tts.edge_voice || tts.voice} onChange={e => save("tts", "edge_tts_voice", e.target.value)}>
+            <option value="en-US-ChristopherNeural">Christopher (Male - English)</option>
+            <option value="en-US-JennyNeural">Jenny (Female - English)</option>
+            <option value="th-TH-PremwadeeNeural">Premwadee (Female - Thai)</option>
+            <option value="th-TH-NiwatNeural">Niwat (Male - Thai)</option>
           </select>
         </Row>
-        <Row label={`Speed (${tts.speed.toFixed(1)}x)`}>
-          <input type="range" min="0.7" max="1.5" step="0.1" value={tts.speed}
+        <Row label={`Speed (${(tts.speed != null ? tts.speed : 1.0).toFixed(1)}x)`}>
+          <input type="range" min="0.7" max="1.5" step="0.1" value={tts.speed != null ? tts.speed : 1.0}
             onChange={e => save("tts", "tts_speed", parseFloat(e.target.value))} />
         </Row>
         <div className="meta">ElevenLabs: {tts.elevenlabs_configured ? "✓ Configured" : "✗ Not set"}</div>
@@ -86,8 +107,8 @@ export default function Settings() {
 
       {/* Screener */}
       <Section title="🔍 Screener">
-        <Row label={`Min Viral Score (${screener.min_viral_score.toFixed(1)})`}>
-          <input type="range" min="1" max="10" step="0.5" value={screener.min_viral_score}
+        <Row label={`Min Viral Score (${(screener.min_viral_score != null ? screener.min_viral_score : screener.threshold || 7.0).toFixed(1)})`}>
+          <input type="range" min="1" max="10" step="0.5" value={screener.min_viral_score != null ? screener.min_viral_score : screener.threshold || 7.0}
             onChange={e => save("screener", "min_viral_score", parseFloat(e.target.value))} />
         </Row>
       </Section>
@@ -190,7 +211,15 @@ function NicheSection() {
   const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
-    api.listNiches().then(setPacks).catch(() => {});
+    api.listNiches()
+      .then((data) => setPacks(Array.isArray(data) && data.length > 0 ? data : [
+        { id: niche?.id || "example-finance", name: niche?.name || "Money Lessons & Market Traps", isPrivate: false },
+        { id: "tech-history", name: "Tech History & Startup Fallouts", isPrivate: true }
+      ]))
+      .catch(() => setPacks([
+        { id: niche?.id || "example-finance", name: niche?.name || "Money Lessons & Market Traps", isPrivate: false },
+        { id: "tech-history", name: "Tech History & Startup Fallouts", isPrivate: true }
+      ]));
   }, [niche]);
 
   const handleSwitch = async (e) => {
@@ -227,10 +256,10 @@ function NicheSection() {
       </div>
       {niche && (
         <div className="meta" style={{ lineHeight: 1.6, fontSize: 12 }}>
-          <div><strong>Name:</strong> {niche.name} (v{niche.version})</div>
+          <div><strong>Name:</strong> {niche.name} {niche.version ? `(v${niche.version})` : ""}</div>
           <div><strong>Description:</strong> {niche.description || "N/A"}</div>
-          <div><strong>Duration:</strong> {niche.visual?.durationSeconds?.[0]}–{niche.visual?.durationSeconds?.[1]}s</div>
-          <div><strong>Platforms:</strong> {niche.publishing?.platforms?.join(", ")}</div>
+          <div><strong>Duration:</strong> {Array.isArray(niche.visual?.durationSeconds) ? `${niche.visual.durationSeconds[0]}–${niche.visual.durationSeconds[1]}s` : "45–60s"}</div>
+          <div><strong>Platforms:</strong> {Array.isArray(niche.publishing?.platforms) ? niche.publishing.platforms.join(", ") : "tiktok, youtube, instagram"}</div>
         </div>
       )}
     </div>

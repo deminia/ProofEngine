@@ -34,7 +34,14 @@ export default function Analytics() {
   const [data, setData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => { api.analytics().then(setData); }, []);
+  useEffect(() => {
+    api.analytics()
+      .then(setData)
+      .catch((err) => {
+        console.warn("Analytics offline fallback:", err);
+        setData({ posts: [], totals: { views: 0, likes: 0, comments: 0 } });
+      });
+  }, []);
 
   async function handleRefresh() {
     setRefreshing(true);

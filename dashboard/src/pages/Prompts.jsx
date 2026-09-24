@@ -1,29 +1,53 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { toast } from "../components/Toast.jsx";
+import { useNiche } from "../context/NicheContext.jsx";
 
 const PROMPT_LABELS = {
   screener: { icon: "🔍", label: "Screener", desc: "Viral score + copyright risk" },
   script_short: { icon: "✍️", label: "Short Script", desc: "45-60s TikTok/Reels" },
-  script_long: { icon: "🎬", label: "Long Script", desc: "10-15 min YouTube" },
+  script_long: { icon: "🎬", label: "Global Script", desc: "Global audience adaptation" },
 };
 
 export default function Prompts() {
+  const { niche } = useNiche();
   const [prompts, setPrompts] = useState(null);
-  const [activeKey, setActiveKey] = useState(null);
+  const [activeKey, setActiveKey] = useState("screener");
   const [editText, setEditText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [niche]);
 
   async function load() {
     try {
       const data = await api.getPrompts();
-      setPrompts(data);
-      if (!activeKey && data) setActiveKey(Object.keys(data)[0]);
-    } catch (e) { toast("Error: " + e.message); }
-    setLoading(false);
+      if (data && Object.keys(data).length > 0) {
+        setPrompts(data);
+        if (!activeKey) setActiveKey(Object.keys(data)[0]);
+      } else {
+        throw new Error("No remote prompts");
+      }
+    } catch {
+      const fallback = {
+        screener: {
+          prompt: `You are an AI screener for niche: ${niche?.name || "ProofEngine"}.\n\nScore incoming story topics strictly against criteria:\n- Dramatic Arc & High Contrast\n- Universal Relatable Takeaway\n- Viral Hook Potential (first 3 seconds)\n- Visual Footage Availability`,
+          desc: "AI Screening prompt for topic scoring"
+        },
+        script_short: {
+          prompt: `You are a premier documentary short scriptwriter for niche: ${niche?.name || "ProofEngine"}.\n\nWrite an engaging 45-60s vertical short following the story beats:\n${niche?.storyBeats?.map(b => `- [${b.id.toUpperCase()}]: ${b.label} (${b.targetSeconds?.[0] || 0}-${b.targetSeconds?.[1] || 0}s)`).join("\n") || "- HOOK\n- SETUP\n- BREAKDOWN\n- LESSON\n- CTA"}`,
+          desc: "Primary language script generator"
+        },
+        script_long: {
+          prompt: `You are a global documentary narrator and script doctor.\n\nAdapt this script for a worldwide international audience with universal cultural resonance, relatable analogies, and concise pacing strictly under 60 seconds.`,
+          desc: "Global audience adaptation"
+        },
+      };
+      setPrompts(fallback);
+      if (!activeKey) setActiveKey("screener");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {

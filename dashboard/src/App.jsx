@@ -9,6 +9,7 @@ import System from "./pages/System.jsx";
 import Settings from "./pages/Settings.jsx";
 import Assets from "./pages/Assets.jsx";
 import Toast from "./components/Toast.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { NicheProvider, useNiche } from "./context/NicheContext.jsx";
 
 const TABS = [
@@ -50,16 +51,19 @@ function AppContent() {
         </nav>
       </aside>
       <main className="content">
-        {tab === "queue" && <Queue />}
-        {tab === "scripts" && <Scripts />}
-        {tab === "videos" && <Videos />}
-        {tab === "calendar" && <Calendar />}
-        {tab === "analytics" && <Analytics />}
-        {tab === "assets" && <Assets />}
-        {tab === "prompts" && <Prompts />}
-        {tab === "system" && <System />}
-        {tab === "settings" && <Settings />}
+        <ErrorBoundary>
+          {tab === "queue" && <Queue />}
+          {tab === "scripts" && <Scripts />}
+          {tab === "videos" && <Videos />}
+          {tab === "calendar" && <Calendar />}
+          {tab === "analytics" && <Analytics />}
+          {tab === "assets" && <Assets />}
+          {tab === "prompts" && <Prompts />}
+          {tab === "system" && <System />}
+          {tab === "settings" && <Settings />}
+        </ErrorBoundary>
       </main>
+
     </div>
   );
 }
