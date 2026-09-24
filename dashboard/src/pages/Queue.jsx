@@ -38,8 +38,6 @@ function findLikelyDuplicates(story, allItems) {
   }).slice(0, 2);
 }
 
-const DEFAULT_CATEGORIES = [];
-
 export default function Queue() {
   const { niche } = useNiche();
   const tiers = (niche?.discoveryTiers && niche.discoveryTiers.length > 0) ? niche.discoveryTiers : [
@@ -292,54 +290,55 @@ export default function Queue() {
         </summary>
         <div className="accordion-body">
           <div className="pill-tabs" style={{ marginBottom: 12, overflowX: "auto", background: "var(--panel2)" }}>
-            {CATEGORIES.map(c => (
+            {tiers.map(t => (
               <button
-                key={c.key}
-                className={`pill-tab ${activeCategoryTab === c.key ? "active" : ""}`}
-                onClick={() => setActiveCategoryTab(c.key)}
+                key={t.id}
+                className={`pill-tab ${activeCategoryTab === t.id ? "active" : ""}`}
+                onClick={() => setActiveCategoryTab(t.id)}
                 style={{
-                  background: activeCategoryTab === c.key ? "var(--panel3)" : "transparent",
-                  color: activeCategoryTab === c.key ? "#fff" : "var(--muted)",
-                  border: activeCategoryTab === c.key ? "1px solid var(--border)" : "1px solid transparent",
+                  background: activeCategoryTab === t.id ? "var(--panel3)" : "transparent",
+                  color: activeCategoryTab === t.id ? "#fff" : "var(--muted)",
+                  border: activeCategoryTab === t.id ? "1px solid var(--border)" : "1px solid transparent",
                 }}
               >
-                {c.title}
+                <span>{t.emoji || "⚡"}</span> <span>{t.label}</span>
               </button>
             ))}
           </div>
 
           {(() => {
-            const cat = CATEGORIES.find(c => c.key === activeCategoryTab) || CATEGORIES[0];
+            const currentTier = tiers.find(t => t.id === activeCategoryTab) || tiers[0];
+            const categories = currentTier?.categories || [];
+            if (!categories.length) {
+              return <div style={{ fontSize: 13, color: "var(--muted)", padding: 12 }}>ไม่มีหมวดหมู่ใน Tier นี้</div>;
+            }
             return (
-              <div>
-                <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12 }}>
-                  {cat.subtitle}
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-                  {cat.groups.map((g, gi) => (
-                    <div key={gi} style={{ background: "var(--panel3)", padding: 12, borderRadius: 8, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#cbd5e1", marginBottom: 8 }}>
-                        {g.label}
-                      </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+                {categories.map((c) => (
+                  <div key={c.id} style={{ background: "var(--panel3)", padding: 12, borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#cbd5e1", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{c.emoji || "💡"}</span> <span>{c.label}</span>
+                    </div>
+                    {c.examples && c.examples.length > 0 && (
                       <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-                        {g.themes.map((t) => (
+                        {c.examples.map((ex, idx) => (
                           <button
-                            key={t.theme}
+                            key={idx}
                             className="secondary sm"
-                            onClick={() => findClassic(t.theme)}
+                            onClick={() => findClassic(ex)}
                             style={{
                               background: "rgba(255, 255, 255, 0.04)",
                               border: "1px solid var(--border)",
                               color: "var(--text-dim)",
                             }}
                           >
-                            <span>{t.icon}</span> <span>{t.label}</span>
+                            <span>⚡</span> <span>{ex}</span>
                           </button>
                         ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
             );
           })()}
