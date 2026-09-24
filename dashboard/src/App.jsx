@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Queue from "./pages/Queue.jsx";
 import Scripts from "./pages/Scripts.jsx";
 import Videos from "./pages/Videos.jsx";
@@ -27,6 +27,14 @@ const TABS = [
 function AppContent() {
   const [tab, setTab] = useState("queue");
   const { niche } = useNiche();
+
+  useEffect(() => {
+    const tabObj = TABS.find((t) => t.id === tab);
+    const tabName = tabObj ? tabObj.label.replace(/^[^\p{L}\p{N}]+\s*/u, "") : "Dashboard";
+    document.title = niche?.name
+      ? `ProofEngine — ${niche.name} | ${tabName}`
+      : `ProofEngine — ${tabName}`;
+  }, [tab, niche]);
 
   return (
     <div className="layout">
