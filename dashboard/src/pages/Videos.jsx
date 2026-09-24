@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useNiche } from "../context/NicheContext.jsx";
+import { useLanguage } from "../context/LanguageContext.jsx";
 import { toast } from "../components/Toast.jsx";
 import { Dropdown } from "../components/Dropdown.jsx";
 
@@ -25,6 +26,7 @@ function resolveMediaUrl(dbPath) {
 
 export default function Videos() {
   const { niche } = useNiche();
+  const { lang, t } = useLanguage();
   const activePlatforms = niche?.publishing?.platforms || ["tiktok", "youtube", "instagram", "facebook", "x"];
   const captionKeys = Object.keys(niche?.social?.captionTemplates || { tiktok: "", youtube: "", facebook: "", x: "" });
   const [items, setItems] = useState([]);
@@ -64,12 +66,12 @@ export default function Videos() {
 
   async function publishImmediately(v) {
     const plats = sel[v.id] || [];
-    if (!plats.length) return toast("เลือก platform อย่างน้อย 1");
+    if (!plats.length) return toast(lang === "th" ? "เลือก platform อย่างน้อย 1" : "Select at least 1 platform");
     try {
       await api.schedulePublish({ video_id: v.id, platforms: plats, scheduled_at: null });
       toast("📤 Publishing now");
     } catch (e) {
-      toast("Publish ไม่สำเร็จ: " + (e.message || e));
+      toast(lang === "th" ? "Publish ไม่สำเร็จ: " + (e.message || e) : "Publish failed: " + (e.message || e));
     } finally {
       setSchedAt((p) => ({ ...p, [v.id]: undefined }));
     }
@@ -77,11 +79,11 @@ export default function Videos() {
 
   async function scheduleForLater(v) {
     const plats = sel[v.id] || [];
-    if (!plats.length) return toast("เลือก platform อย่างน้อย 1");
+    if (!plats.length) return toast(lang === "th" ? "เลือก platform อย่างน้อย 1" : "Select at least 1 platform");
     const dt = schedAt[v.id];
-    if (!dt) return toast("ใส่วันเวลาในช่องก่อนกด Schedule");
+    if (!dt) return toast(lang === "th" ? "ใส่วันเวลาในช่องก่อนกด Schedule" : "Please set date and time before scheduling");
     const parsed = new Date(dt);
-    if (isNaN(parsed.getTime())) return toast("วันเวลาไม่ถูกต้อง — โปรดใส่ใหม่");
+    if (isNaN(parsed.getTime())) return toast(lang === "th" ? "วันเวลาไม่ถูกต้อง — โปรดใส่ใหม่" : "Invalid date/time format");
     try {
       await api.schedulePublish({
         video_id: v.id,
@@ -90,16 +92,16 @@ export default function Videos() {
       });
       toast(`⏳ Scheduled for ${dt}`);
     } catch (e) {
-      toast("Schedule ไม่สำเร็จ: " + (e.message || e));
+      toast(lang === "th" ? "Schedule ไม่สำเร็จ: " + (e.message || e) : "Schedule failed: " + (e.message || e));
     } finally {
       setSchedAt((p) => ({ ...p, [v.id]: undefined }));
     }
   }
 
   async function remove(v) {
-    if (!confirm(`ลบ Video #${v.id}?`)) return;
+    if (!confirm(lang === "th" ? `ลบ Video #${v.id}?` : `Delete Video #${v.id}?`)) return;
     await api.deleteVideo(v.id);
-    toast(`ลบ Video #${v.id} แล้ว`);
+    toast(lang === "th" ? `ลบ Video #${v.id} แล้ว` : `Deleted Video #${v.id}`);
     load();
   }
 
@@ -110,9 +112,9 @@ export default function Videos() {
     } catch (e) {
       const msg = e?.message || String(e);
       if (msg.includes("404")) {
-        toast("ยังไม่มี ffmpeg log สำหรับวิดีโอนี้");
+        toast(lang === "th" ? "ยังไม่มี ffmpeg log สำหรับวิดีโอนี้" : "No ffmpeg log for this video yet");
       } else {
-        toast("ดึง log ไม่สำเร็จ: " + msg);
+        toast(lang === "th" ? "ดึง log ไม่สำเร็จ: " + msg : "Failed to fetch log: " + msg);
       }
     }
   }
@@ -127,7 +129,7 @@ export default function Videos() {
       if (msg.includes("429")) {
         toast("Rebuild rate-limited (60s/script): " + msg);
       } else {
-        toast("Rebuild ไม่สำเร็จ: " + msg);
+        toast(lang === "th" ? "Rebuild ไม่สำเร็จ: " + msg : "Rebuild failed: " + msg);
       }
     }
   }
@@ -139,18 +141,18 @@ export default function Videos() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast("📦 Exporting ZIP… รอสักครู่");
+    toast(lang === "th" ? "📦 Exporting ZIP… รอสักครู่" : "📦 Exporting ZIP… please wait");
   }
 
   async function showCaption(v, platform) {
     if (platform === "x_thread") {
-      toast("⏳ AI กำลังเขียน Thread ให้แบบมืออาชีพ (รอประมาณ 10-15 วิ)...");
+      toast(lang === "th" ? "⏳ AI กำลังเขียน Thread ให้แบบมืออาชีพ (รอประมาณ 10-15 วิ)..." : "⏳ AI generating professional thread (10-15s)...");
     }
     try {
       const data = await api.getCaption(v.script_id, platform, v.language || "th");
       setCaptionModal({ ...data, video_id: v.id });
     } catch (e) {
-      toast("ดึง caption ไม่ได้: " + e.message);
+      toast(lang === "th" ? "ดึง caption ไม่ได้: " + e.message : "Failed to fetch caption: " + e.message);
     }
   }
 
@@ -158,9 +160,9 @@ export default function Videos() {
     if (!captionModal) return;
     try {
       await navigator.clipboard.writeText(captionModal.caption);
-      toast("📋 คัดลอกแล้ว — นำไปวางในแอปได้เลย");
+      toast(lang === "th" ? "📋 คัดลอกแล้ว — นำไปวางในแอปได้เลย" : "📋 Copied to clipboard");
     } catch {
-      toast("คัดลอกไม่สำเร็จ — เลือกข้อความเองด้านล่าง");
+      toast(lang === "th" ? "คัดลอกไม่สำเร็จ — เลือกข้อความเองด้านล่าง" : "Copy failed — select text manually below");
     }
   }
 
@@ -168,9 +170,9 @@ export default function Videos() {
     if (!captionModal?.first_comment) return;
     try {
       await navigator.clipboard.writeText(captionModal.first_comment);
-      toast("📋 คัดลอก first-comment แล้ว — วางใต้โพสต์ได้เลย");
+      toast(lang === "th" ? "📋 คัดลอก first-comment แล้ว — วางใต้โพสต์ได้เลย" : "📋 Copied first comment to clipboard");
     } catch {
-      toast("คัดลอกไม่สำเร็จ");
+      toast(lang === "th" ? "คัดลอกไม่สำเร็จ" : "Copy failed");
     }
   }
 
@@ -182,7 +184,7 @@ export default function Videos() {
     const v = editPostId[post.id];
     if (!v) return;
     await api.updatePost(post.id, { external_id: v });
-    toast("เซฟ TikTok ID แล้ว");
+    toast(lang === "th" ? "เซฟ ID แล้ว" : "Saved ID");
     setEditPostId((m) => ({ ...m, [post.id]: undefined }));
     load();
   }
@@ -195,28 +197,28 @@ export default function Videos() {
       comments: parseInt(f.comments || 0, 10) || 0,
       shares: parseInt(f.shares || 0, 10) || 0,
     });
-    toast("เซฟ stats แล้ว");
+    toast(lang === "th" ? "เซฟ stats แล้ว" : "Saved stats");
     setStatsForm((m) => ({ ...m, [post.id]: {} }));
   }
 
   return (
     <>
-      <div className="page-title">🎬 Videos</div>
-      <div className="page-sub">ตรวจดูวิดีโอตัวอย่าง เลือกแพลตฟอร์ม และเผยแพร่หรือตั้งเวลา</div>
+      <div className="page-title">🎬 {t("videos_title", "Videos")}</div>
+      <div className="page-sub">{t("videos_sub", "Review rendered videos, select target platforms, and publish or schedule.")}</div>
 
       {/* Type Filter Tabs */}
       <div className="pill-tabs" style={{ marginBottom: 20 }}>
         <button className={`pill-tab ${activeTab === "shorts" ? "active" : ""}`} onClick={() => setActiveTab("shorts")}>
-          📱 Shorts (ไทย)
+          {t("videos_tab_shorts", "📱 Shorts (Primary)")}
         </button>
         <button className={`pill-tab ${activeTab === "en" ? "active" : ""}`} onClick={() => setActiveTab("en")}>
-          🌐 Global (EN)
+          {t("videos_tab_global", "🌐 Global (EN)")}
         </button>
         <button className={`pill-tab ${activeTab === "long" ? "active" : ""}`} onClick={() => setActiveTab("long")}>
-          🖥️ Long Form
+          {t("videos_tab_long", "🖥️ Long Form")}
         </button>
         <button className={`pill-tab ${activeTab === "all" ? "active" : ""}`} onClick={() => setActiveTab("all")}>
-          🎬 ทั้งหมด
+          {t("videos_tab_all", "🎬 All")}
         </button>
       </div>
 
@@ -246,7 +248,7 @@ export default function Videos() {
                     </span>
                   ) : (
                     <span className="badge" style={{ background: "rgba(99, 102, 241, 0.15)", color: "#a5b4fc", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
-                      🇹🇭 Thai
+                      {lang === "th" ? "🇹🇭 Thai" : "Primary (TH)"}
                     </span>
                   )}
                 </div>
@@ -276,7 +278,7 @@ export default function Videos() {
                     <div style={{ width: `${v.progress}%`, background: "linear-gradient(90deg, var(--indigo), var(--blue))", height: "100%", transition: "width 0.3s ease" }} />
                   </div>
                   <div className="row" style={{ justifyContent: "space-between", marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
-                    <span>กำลังเรนเดอร์วิดีโอ...</span>
+                    <span>{t("videos_rendering", "Rendering video...")}</span>
                     <span>{v.progress}%</span>
                   </div>
                   <div className="row" style={{ marginTop: 10, gap: 8 }}>
@@ -292,7 +294,7 @@ export default function Videos() {
                   {/* Platform Selection Badges */}
                   <div style={{ marginBottom: 10 }}>
                     <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 6 }}>
-                      เลือกแพลตฟอร์มเป้าหมาย:
+                      {t("videos_target_plat", "Target Platforms:")}
                     </div>
                     <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
                       {PLATFORMS.map((p) => {
@@ -312,7 +314,7 @@ export default function Videos() {
                             <span>{p.label}</span>
                             {isPublished && (
                               <span style={{ fontSize: 9.5, background: "var(--green-bg)", color: "var(--green)", padding: "1px 5px", borderRadius: 4, marginLeft: 4, fontWeight: 700 }}>
-                                ✓ Published
+                                {t("videos_published_badge", "✓ Published")}
                               </span>
                             )}
                           </button>
@@ -328,7 +330,7 @@ export default function Videos() {
                         className="success sm"
                         onClick={() => publishImmediately(v)}
                         disabled={!isSelectedAnyPlat}
-                        title={isSelectedAnyPlat ? "เผยแพร่ไปยังแพลตฟอร์มที่เลือกทันที" : "โปรดเลือกแพลตฟอร์มก่อน"}
+                        title={isSelectedAnyPlat ? (lang === "th" ? "เผยแพร่ไปยังแพลตฟอร์มที่เลือกทันที" : "Publish to selected platforms immediately") : (lang === "th" ? "โปรดเลือกแพลตฟอร์มก่อน" : "Please select platforms first")}
                         style={{ padding: "6px 16px", fontWeight: 700 }}
                       >
                         📤 Publish now
@@ -340,7 +342,7 @@ export default function Videos() {
                         onClick={() => setShowSched(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
                         style={{ fontSize: 11.5, color: "var(--muted)", textDecoration: "underline", padding: "2px 6px" }}
                       >
-                        {showSched[v.id] || schedAt[v.id] ? "▴ ซ่อนการตั้งเวลา" : "⏳ ตั้งเวลาล่วงหน้า (Schedule)..."}
+                        {showSched[v.id] || schedAt[v.id] ? t("videos_schedule_hide", "▴ Hide schedule") : t("videos_schedule_show", "⏳ Schedule for later...")}
                       </button>
                     </div>
 
@@ -352,15 +354,15 @@ export default function Videos() {
                           value={schedAt[v.id] || ""}
                           onChange={(e) => setSchedAt((p) => ({ ...p, [v.id]: e.target.value }))}
                           style={{ fontSize: 11.5, padding: "4px 8px", maxWidth: 210 }}
-                          title="ใส่วันเวลาสำหรับตั้งเวลาโพสต์"
+                          title={lang === "th" ? "ใส่วันเวลาสำหรับตั้งเวลาโพสต์" : "Choose date and time to schedule"}
                         />
                         <button
                           className="secondary sm"
                           onClick={() => scheduleForLater(v)}
                           disabled={!schedAt[v.id] || !isSelectedAnyPlat}
-                          title="ใส่วันเวลาและเลือกแพลตฟอร์มก่อนกด"
+                          title={lang === "th" ? "ใส่วันเวลาและเลือกแพลตฟอร์มก่อนกด" : "Select platform and date/time first"}
                         >
-                          ⏳ Schedule
+                          {t("videos_schedule", "⏳ Schedule")}
                         </button>
                       </div>
                     </div>
@@ -370,7 +372,7 @@ export default function Videos() {
                   <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
                     {/* Single Clean Copy Caption Dropdown */}
                     <Dropdown
-                      trigger={<button className="secondary sm">📋 คัดลอก Caption ▾</button>}
+                      trigger={<button className="secondary sm">{t("videos_copy_caption", "📋 Copy Caption ▾")}</button>}
                       items={captionKeys.map((k) => ({
                         label: `📋 ${k.toUpperCase()} Caption`,
                         onClick: () => showCaption(v, k),
@@ -379,13 +381,13 @@ export default function Videos() {
 
                     {/* Secondary Actions Dropdown */}
                     <Dropdown
-                      trigger={<button className="icon-btn" title="เมนูเพิ่มเติม">⋯</button>}
+                      trigger={<button className="icon-btn" title={t("videos_menu_more", "⋯ More")}>⋯</button>}
                       items={[
-                        { label: "🎬 Export สำหรับ CapCut (ZIP)", icon: "📦", onClick: () => exportForCapcut(v) },
-                        { label: "🔄 Rebuild วิดีโอนี้ใหม่", icon: "🔨", onClick: () => retry(v) },
-                        { label: "📜 ดู ffmpeg log", icon: "📜", onClick: () => viewLog(v) },
+                        { label: t("videos_export_capcut", "🎬 Export for CapCut (ZIP)"), icon: "📦", onClick: () => exportForCapcut(v) },
+                        { label: t("videos_rebuild", "🔄 Rebuild Video"), icon: "🔨", onClick: () => retry(v) },
+                        { label: t("videos_view_log", "📜 View ffmpeg log"), icon: "📜", onClick: () => viewLog(v) },
                         { divider: true },
-                        { label: "🗑️ ลบวิดีโอนี้", icon: "🗑️", danger: true, onClick: () => remove(v) },
+                        { label: t("videos_delete", "🗑️ Delete Video"), icon: "🗑️", danger: true, onClick: () => remove(v) },
                       ]}
                     />
                   </div>
@@ -396,25 +398,25 @@ export default function Videos() {
               {manualPosts.length > 0 && (
                 <details className="custom-accordion" style={{ marginTop: 12, marginBottom: 0 }}>
                   <summary style={{ padding: "8px 12px", fontSize: 12 }}>
-                    <span>📊 บันทึกสถิติ Manual Upload ({manualPosts.length} แพลตฟอร์ม)</span>
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>เปิด ▾</span>
+                    <span>{t("videos_manual_upload", "📊 Manual Upload Tracking")} ({manualPosts.length} {lang === "th" ? "แพลตฟอร์ม" : "platforms"})</span>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>{t("open", "Open ▾")}</span>
                   </summary>
                   <div className="accordion-body" style={{ padding: 12 }}>
                     {manualPosts.map((p) => (
                       <div key={p.id} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: "1px dashed var(--border)" }}>
                         <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
                           <span style={{ fontSize: 12, fontWeight: 700 }}>{p.platform}</span>
-                          <code style={{ fontSize: 11, color: "var(--muted)" }}>{p.external_id || "(ยังไม่มี ID)"}</code>
+                          <code style={{ fontSize: 11, color: "var(--muted)" }}>{p.external_id || (lang === "th" ? "(ยังไม่มี ID)" : "(No ID yet)")}</code>
                         </div>
                         <div className="row" style={{ gap: 6, marginBottom: 6 }}>
                           <input
                             type="text"
-                            placeholder="วางโพสต์ URL หรือ Video ID..."
+                            placeholder={lang === "th" ? "วางโพสต์ URL หรือ Video ID..." : "Paste post URL or Video ID..."}
                             value={editPostId[p.id] || ""}
                             onChange={(e) => setEditPostId((m) => ({ ...m, [p.id]: e.target.value }))}
                             style={{ fontSize: 11.5, padding: "3px 6px" }}
                           />
-                          <button className="secondary sm" onClick={() => saveExternalId(p)}>💾 เซฟ ID</button>
+                          <button className="secondary sm" onClick={() => saveExternalId(p)}>{t("videos_save_id", "💾 Save ID")}</button>
                         </div>
                         <div className="row" style={{ gap: 4, flexWrap: "wrap" }}>
                           {["views", "likes", "comments", "shares"].map((k) => (
@@ -449,10 +451,10 @@ export default function Videos() {
               {v.status === "failed" && (
                 <div className="row" style={{ marginTop: 12, justifyContent: "space-between" }}>
                   <div className="row" style={{ gap: 6 }}>
-                    <button className="success sm" onClick={() => retry(v)}>🔄 ลองใหม่ (Retry)</button>
-                    <button className="secondary sm" onClick={() => viewLog(v)}>📜 ดู ffmpeg log</button>
+                    <button className="success sm" onClick={() => retry(v)}>{lang === "th" ? "🔄 ลองใหม่ (Retry)" : "🔄 Retry"}</button>
+                    <button className="secondary sm" onClick={() => viewLog(v)}>{t("videos_view_log", "📜 View ffmpeg log")}</button>
                   </div>
-                  <button className="btn-outline-danger sm" onClick={() => remove(v)}>🗑️ ลบ</button>
+                  <button className="btn-outline-danger sm" onClick={() => remove(v)}>{lang === "th" ? "🗑️ ลบ" : "🗑️ Delete"}</button>
                 </div>
               )}
             </div>
@@ -461,7 +463,7 @@ export default function Videos() {
 
         {!items.length && (
           <div className="card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: 36, color: "var(--muted)" }}>
-            ยังไม่มีวิดีโอ — ให้ไปอนุมัติสคริปต์ในหน้า Script Review ก่อน
+            {t("videos_empty", "No videos rendered yet — approve a script in the Scripts tab first")}
           </div>
         )}
       </div>
@@ -496,12 +498,12 @@ export default function Videos() {
               }}
             >
               <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
-                <h3 style={{ margin: 0 }}>📋 Caption สำหรับ {platInfo.name}</h3>
+                <h3 style={{ margin: 0 }}>📋 {lang === "th" ? `Caption สำหรับ ${platInfo.name}` : `Caption for ${platInfo.name}`}</h3>
                 <button className="btn-subtle sm" onClick={() => setCaptionModal(null)}>✕</button>
               </div>
 
               <div className="meta" style={{ marginBottom: 10 }}>
-                {captionModal.char_count} ตัวอักษร — niche: {captionModal.niche}
+                {captionModal.char_count} {lang === "th" ? "ตัวอักษร" : "characters"} — niche: {captionModal.niche}
               </div>
 
               {/* Sanity Warnings if any */}
@@ -518,7 +520,7 @@ export default function Videos() {
                   }}
                 >
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                    ⚠️ ตรวจสอบข้อความก่อนโพสต์ (พบ {captionModal.warnings.length} จุดน่าสงสัย):
+                    ⚠️ {lang === "th" ? `ตรวจสอบข้อความก่อนโพสต์ (พบ ${captionModal.warnings.length} จุดน่าสงสัย):` : `Review before posting (${captionModal.warnings.length} warnings):`}
                   </div>
                   <ul style={{ margin: "4px 0 0 18px" }}>
                     {captionModal.warnings.map((w, i) => (
@@ -532,10 +534,10 @@ export default function Videos() {
               {captionModal.cover_url && (
                 <div style={{ marginBottom: 14, background: "var(--panel2)", padding: 10, borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
-                    🖼️ รูปหน้าปก (Cover Image)
+                    🖼️ {lang === "th" ? "รูปหน้าปก (Cover Image)" : "Cover Image"}
                   </div>
                   <div className="row" style={{ gap: 12, alignItems: "flex-start" }}>
-                    <a href={captionModal.cover_url} target="_blank" rel="noopener noreferrer" title="คลิกเปิดเต็มจอเพื่อดาวน์โหลด">
+                    <a href={captionModal.cover_url} target="_blank" rel="noopener noreferrer" title={lang === "th" ? "คลิกเปิดเต็มจอเพื่อดาวน์โหลด" : "Click to view full image to download"}>
                       <img
                         src={captionModal.cover_url}
                         alt="cover"
@@ -543,10 +545,21 @@ export default function Videos() {
                       />
                     </a>
                     <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.6 }}>
-                      ขนาด 1080×1920 สำหรับ {platInfo.name}<br/>
-                      1. คลิกที่รูปเพื่อเปิดภาพขนาดเต็ม<br/>
-                      2. คลิกขวา → บันทึกรูปภาพ (Save Image)<br/>
-                      3. อัปโหลดเป็นหน้าปกใน {platInfo.name} Studio
+                      {lang === "th" ? (
+                        <>
+                          ขนาด 1080×1920 สำหรับ {platInfo.name}<br/>
+                          1. คลิกที่รูปเพื่อเปิดภาพขนาดเต็ม<br/>
+                          2. คลิกขวา → บันทึกรูปภาพ (Save Image)<br/>
+                          3. อัปโหลดเป็นหน้าปกใน {platInfo.name} Studio
+                        </>
+                      ) : (
+                        <>
+                          1080×1920 portrait for {platInfo.name}<br/>
+                          1. Click image to open full resolution<br/>
+                          2. Right-click → Save image<br/>
+                          3. Upload as cover in {platInfo.name} Studio
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -554,7 +567,7 @@ export default function Videos() {
 
               {/* Caption Textarea */}
               <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 700 }}>
-                ✏️ เนื้อหา Caption (แก้ไขได้):
+                ✏️ {lang === "th" ? "เนื้อหา Caption (แก้ไขได้):" : "Caption Text (Editable):"}
               </div>
               <textarea
                 value={captionModal.caption}
@@ -566,11 +579,11 @@ export default function Videos() {
 
               <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                 <button className="success" onClick={copyCaption}>
-                  📋 คัดลอก Caption
+                  {lang === "th" ? "📋 คัดลอก Caption" : "📋 Copy Caption"}
                 </button>
                 <a href={platInfo.url} target="_blank" rel="noopener noreferrer">
                   <button className="secondary">
-                    {platInfo.icon} เปิด {platInfo.name} Studio
+                    {platInfo.icon} {lang === "th" ? `เปิด ${platInfo.name} Studio` : `Open ${platInfo.name} Studio`}
                   </button>
                 </a>
               </div>
@@ -579,7 +592,7 @@ export default function Videos() {
               {captionModal.first_comment && (
                 <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                    💬 First comment (สำหรับวางเป็นคอมเมนต์แรก — เครดิตรูปภาพ):
+                    💬 {lang === "th" ? "First comment (สำหรับวางเป็นคอมเมนต์แรก — เครดิตรูปภาพ):" : "First comment (pin as top comment for media credits):"}
                   </div>
                   <textarea
                     readOnly
@@ -587,7 +600,7 @@ export default function Videos() {
                     style={{ minHeight: 80, fontSize: 12, color: "var(--muted)", marginBottom: 8 }}
                   />
                   <button className="secondary sm" onClick={copyFirstComment}>
-                    📋 คัดลอก First-comment
+                    {lang === "th" ? "📋 คัดลอก First-comment" : "📋 Copy First Comment"}
                   </button>
                 </div>
               )}
@@ -630,7 +643,7 @@ export default function Videos() {
                 className="secondary sm"
                 onClick={() => {
                   navigator.clipboard.writeText(logModal.content);
-                  toast("คัดลอก log แล้ว");
+                  toast(lang === "th" ? "คัดลอก log แล้ว" : "Log copied to clipboard");
                 }}
               >
                 📋 Copy log

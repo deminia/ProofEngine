@@ -115,27 +115,27 @@ export default function Queue() {
 
   async function approve(id) {
     await api.approveStory(id);
-    toast("✓ Approved — กำลัง generate script");
+    toast(lang === "th" ? "✓ Approved — กำลัง generate script" : "✓ Approved — generating script");
     load();
   }
 
   async function reject(id) {
     await api.rejectStory(id);
-    toast("🗑 ปฏิเสธเรื่องแล้ว");
+    toast(lang === "th" ? "🗑 ปฏิเสธเรื่องแล้ว" : "🗑 Story rejected");
     load();
   }
 
   async function destroy(id) {
-    if (!confirm("ลบเรื่องนี้ออกจากระบบถาวร?")) return;
+    if (!confirm(lang === "th" ? "ลบเรื่องนี้ออกจากระบบถาวร?" : "Permanently delete this story?")) return;
     await api.deleteStory(id);
-    toast("ลบเรื่องสำเร็จ");
+    toast(lang === "th" ? "ลบเรื่องสำเร็จ" : "Story deleted");
     load();
   }
 
   async function handleBulkApprove() {
     const count = selectedIds.size;
     if (!count) return;
-    if (!confirm(`อนุมัติ ${count} เรื่องที่เลือกพร้อมกันและเริ่มสร้างสคริปต์?`)) return;
+    if (!confirm(lang === "th" ? `อนุมัติ ${count} เรื่องที่เลือกพร้อมกันและเริ่มสร้างสคริปต์?` : `Approve ${count} selected stories and generate scripts?`)) return;
     
     let approved = 0;
     for (const id of selectedIds) {
@@ -146,33 +146,33 @@ export default function Queue() {
         console.error("Bulk approve failed for", id, err);
       }
     }
-    toast(`✓ อนุมัติสำเร็จ ${approved}/${count} เรื่อง!`);
+    toast(lang === "th" ? `✓ อนุมัติสำเร็จ ${approved}/${count} เรื่อง!` : `✓ Approved ${approved}/${count} stories!`);
     load();
   }
 
   async function cleanupRejected() {
-    if (!confirm(`ลบ rejected ทั้งหมด (${counts.rejected || 0} เรื่อง) ถาวร?`)) return;
+    if (!confirm(lang === "th" ? `ลบ rejected ทั้งหมด (${counts.rejected || 0} เรื่อง) ถาวร?` : `Permanently delete all rejected (${counts.rejected || 0}) stories?`)) return;
     const r = await api.cleanupRejected();
-    toast(`ลบไป ${r.removed} เรื่อง`);
+    toast(lang === "th" ? `ลบไป ${r.removed} เรื่อง` : `Removed ${r.removed} stories`);
     load();
   }
 
   async function cleanupPending() {
-    if (!confirm(`ลบข่าว pending ทั้งหมด (${counts.pending || 0} เรื่อง) ถาวร?`)) return;
+    if (!confirm(lang === "th" ? `ลบข่าว pending ทั้งหมด (${counts.pending || 0} เรื่อง) ถาวร?` : `Permanently delete all pending (${counts.pending || 0}) stories?`)) return;
     const r = await api.cleanupPending();
-    toast(`ลบข่าว pending ไป ${r.removed} เรื่อง`);
+    toast(lang === "th" ? `ลบข่าว pending ไป ${r.removed} เรื่อง` : `Removed ${r.removed} pending stories`);
     load();
   }
 
   async function scan() {
     await api.scanStories();
-    toast("🤖 RSS scan triggered (ใช้เวลา 10-30 วิ)");
+    toast(lang === "th" ? "🤖 RSS scan triggered (ใช้เวลา 10-30 วิ)" : "🤖 RSS scan triggered (takes 10-30s)");
     setTimeout(load, 3000);
   }
 
   async function findClassic(theme) {
     await api.findClassicStories(theme);
-    toast(`🎯 ให้ AI หาเรื่องแนว ${theme} แล้ว`);
+    toast(lang === "th" ? `🎯 ให้ AI หาเรื่องแนว ${theme} แล้ว` : `🎯 AI story finder started for ${theme}`);
     setTimeout(load, 4000);
   }
 
@@ -237,7 +237,7 @@ export default function Queue() {
                   onClick: cleanupRejected,
                 },
                 {
-                  label: `ลบ Pending ทั้งหมด (${counts.pending || 0})`,
+                  label: lang === "th" ? `ลบ Pending ทั้งหมด (${counts.pending || 0})` : `Delete All Pending (${counts.pending || 0})`,
                   icon: "🧹",
                   danger: true,
                   disabled: !counts.pending,
@@ -253,13 +253,13 @@ export default function Queue() {
           <div className="row" style={{ flex: "1 1 280px", maxWidth: 460 }}>
             <input
               type="text"
-              placeholder="🔍 ค้นหาหัวข้อ หรือ ประเด็นเรื่อง..."
+              placeholder={t("queue_search_placeholder", "🔍 Search stories, topics, keywords...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ padding: "6px 12px", fontSize: 13 }}
             />
             {searchQuery && (
-              <button className="btn-subtle sm" onClick={() => setSearchQuery("")} title="ล้างคำค้น">✕</button>
+              <button className="btn-subtle sm" onClick={() => setSearchQuery("")} title={lang === "th" ? "ล้างคำค้น" : "Clear search"}>✕</button>
             )}
           </div>
 
@@ -267,10 +267,10 @@ export default function Queue() {
             {filter !== "rejected" && (
               <label
                 style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)", cursor: "pointer", userSelect: "none" }}
-                title={`ซ่อนเรื่องที่คะแนนต่ำกว่า ${SCORE_THRESHOLD.toFixed(1)}`}
+                title={lang === "th" ? `ซ่อนเรื่องที่คะแนนต่ำกว่า ${SCORE_THRESHOLD.toFixed(1)}` : `Hide stories with score < ${SCORE_THRESHOLD.toFixed(1)}`}
               >
                 <input type="checkbox" checked={hideLowScore} onChange={e => setHideLowScore(e.target.checked)} />
-                <span>ซ่อน &lt; {SCORE_THRESHOLD.toFixed(1)}</span>
+                <span>{t("queue_hide_low_score", `Hide < ${SCORE_THRESHOLD.toFixed(1)}`)}</span>
                 {hideLowScore && hiddenCount > 0 && (
                   <span style={{ color: "var(--amber)", fontSize: 11 }}>({hiddenCount})</span>
                 )}
@@ -279,13 +279,13 @@ export default function Queue() {
 
             {visibleItems.length > 0 && (
               <button className="btn-subtle sm" onClick={toggleSelectAll}>
-                {selectedIds.size === visibleItems.length ? "☑ ปลดเลือกทั้งหมด" : "☐ เลือกทั้งหมด"}
+                {selectedIds.size === visibleItems.length ? (lang === "th" ? "☑ ปลดเลือกทั้งหมด" : "☑ Deselect All") : (lang === "th" ? "☐ เลือกทั้งหมด" : "☐ Select All")}
               </button>
             )}
 
             {selectedIds.size > 0 && (
               <button className="success sm" onClick={handleBulkApprove}>
-                ✓ Approve {selectedIds.size} เรื่องที่เลือก
+                ✓ Approve {selectedIds.size} {lang === "th" ? "เรื่องที่เลือก" : "selected"}
               </button>
             )}
           </div>
@@ -295,8 +295,8 @@ export default function Queue() {
       {/* Collapsible Section 1: AI Classic Finder */}
       <details className="custom-accordion">
         <summary>
-          <span>🎯 AI Classic Finder (คลิกเพื่อเลือกหมวดหมู่ให้ AI ค้นเรื่องในอดีต)</span>
-          <span style={{ fontSize: 12, color: "var(--muted)" }}>ขยาย ▾</span>
+          <span>🎯 {t("queue_ai_finder", "AI Story Finder (Generate curated cases by category)")}</span>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>{lang === "th" ? "ขยาย ▾" : "Expand ▾"}</span>
         </summary>
         <div className="accordion-body">
           <div className="pill-tabs" style={{ marginBottom: 12, overflowX: "auto", background: "var(--panel2)" }}>
@@ -320,7 +320,7 @@ export default function Queue() {
             const currentTier = tiers.find(t => t.id === activeCategoryTab) || tiers[0];
             const categories = currentTier?.categories || [];
             if (!categories.length) {
-              return <div style={{ fontSize: 13, color: "var(--muted)", padding: 12 }}>ไม่มีหมวดหมู่ใน Tier นี้</div>;
+              return <div style={{ fontSize: 13, color: "var(--muted)", padding: 12 }}>{lang === "th" ? "ไม่มีหมวดหมู่ใน Tier นี้" : "No categories in this tier"}</div>;
             }
             return (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
@@ -358,34 +358,34 @@ export default function Queue() {
       {/* Collapsible Section 2: Manual Story Entry */}
       <details className="custom-accordion">
         <summary>
-          <span>📝 เพิ่มเรื่องด้วยตัวเอง (จาก URL หรือ เขียนข้อความ)</span>
-          <span style={{ fontSize: 12, color: "var(--muted)" }}>ขยาย ▾</span>
+          <span>📝 {t("queue_manual_add", "Add Custom Story (From URL or Text)")}</span>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>{lang === "th" ? "ขยาย ▾" : "Expand ▾"}</span>
         </summary>
         <div className="accordion-body">
           <div className="row" style={{ gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
             {/* Box 1: URL */}
             <div style={{ flex: "1 1 300px", background: "var(--panel3)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🔗 ดึงเรื่องจาก URL</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🔗 {lang === "th" ? "ดึงเรื่องจาก URL" : "Fetch Story from URL"}</div>
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const url = formData.get("url");
                 if (!url) return;
                 try {
-                  const res = await api.createStory({ title: "ดึงข้อมูลจาก URL...", url, source: "manual_url", content: "" });
-                  toast(res.duplicate ? "⚠️ URL นี้เคยมีในระบบแล้ว" : "✅ เพิ่มเรื่องจาก URL สำเร็จ รอ Screen...");
+                  const res = await api.createStory({ title: "Importing from URL...", url, source: "manual_url", content: "" });
+                  toast(res.duplicate ? (lang === "th" ? "⚠️ URL นี้เคยมีในระบบแล้ว" : "⚠️ Story URL already exists") : (lang === "th" ? "✅ เพิ่มเรื่องจาก URL สำเร็จ รอ Screen..." : "✅ Story imported, ready for screening"));
                   e.target.reset();
                   setTimeout(load, 1500);
                 } catch (err) { toast("Error: " + err.message); }
               }}>
                 <input type="url" name="url" placeholder="https://..." required style={{ marginBottom: 8 }} />
-                <button type="submit" className="primary sm" style={{ width: "100%" }}>ดึงเรื่องจาก URL</button>
+                <button type="submit" className="primary sm" style={{ width: "100%" }}>{lang === "th" ? "ดึงเรื่องจาก URL" : "Fetch from URL"}</button>
               </form>
             </div>
 
             {/* Box 2: Text */}
             <div style={{ flex: "1 1 300px", background: "var(--panel3)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✍️ เขียนเรื่องด้วยตัวเอง</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✍️ {lang === "th" ? "เขียนเรื่องด้วยตัวเอง" : "Write Custom Story"}</div>
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -394,14 +394,14 @@ export default function Queue() {
                 if (!title || !content) return;
                 try {
                   await api.createStory({ title, content, source: "manual_text", url: "" });
-                  toast("✅ สร้างเรื่องจากข้อความสำเร็จ รอ Screen...");
+                  toast(lang === "th" ? "✅ สร้างเรื่องจากข้อความสำเร็จ รอ Screen..." : "✅ Story created, ready for screening");
                   e.target.reset();
                   setTimeout(load, 1500);
                 } catch (err) { toast("Error: " + err.message); }
               }}>
-                <input type="text" name="title" placeholder="หัวข้อเรื่อง" required style={{ marginBottom: 8 }} />
-                <textarea name="content" placeholder="เนื้อเรื่องย่อ..." rows="2" required style={{ minHeight: 60, marginBottom: 8 }} />
-                <button type="submit" className="primary sm" style={{ width: "100%" }}>สร้างเรื่องจาก Text</button>
+                <input type="text" name="title" placeholder={lang === "th" ? "หัวข้อเรื่อง" : "Story Title"} required style={{ marginBottom: 8 }} />
+                <textarea name="content" placeholder={lang === "th" ? "เนื้อเรื่องย่อ..." : "Story Summary / Outline..."} rows="2" required style={{ minHeight: 60, marginBottom: 8 }} />
+                <button type="submit" className="primary sm" style={{ width: "100%" }}>{lang === "th" ? "สร้างเรื่องจาก Text" : "Create Story"}</button>
               </form>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function Queue() {
 
       {/* Story Grid */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px 0", color: "var(--muted)" }}>กำลังโหลดคิวเรื่อง…</div>
+        <div style={{ textAlign: "center", padding: "40px 0", color: "var(--muted)" }}>{lang === "th" ? "กำลังโหลดคิวเรื่อง…" : "Loading story queue…"}</div>
       ) : (
         <div className="grid">
           {visibleItems.map((s) => {
@@ -475,7 +475,7 @@ export default function Queue() {
                 {/* Duplicate Warning if any */}
                 {dups.length > 0 && (
                   <div style={{ marginBottom: 8, padding: "6px 10px", background: "var(--red-bg)", borderLeft: "3px solid var(--red)", borderRadius: 4, fontSize: 11.5 }}>
-                    <span style={{ color: "var(--red)", fontWeight: 700 }}>⚠️ อาจซ้ำกับ: </span>
+                    <span style={{ color: "var(--red)", fontWeight: 700 }}>⚠️ {lang === "th" ? "อาจซ้ำกับ: " : "Potential duplicate: "}</span>
                     {dups.map(d => d.title).join(", ")}
                   </div>
                 )}
@@ -491,7 +491,7 @@ export default function Queue() {
                 <div className="row" style={{ justifyContent: "space-between", fontSize: 11.5, color: "var(--muted)", marginTop: 8 }}>
                   <span>{s.source} • {new Date(s.created_at).toLocaleDateString()}</span>
                   <button className="btn-subtle sm" onClick={() => toggleCardExpand(s.id)} style={{ padding: 0 }}>
-                    {isExpanded ? "ย่อเนื้อหา ▴" : "ดูเนื้อเรื่องย่อ ▾"}
+                    {isExpanded ? (lang === "th" ? "ย่อเนื้อหา ▴" : "Collapse ▴") : (lang === "th" ? "ดูเนื้อเรื่องย่อ ▾" : "View Details ▾")}
                   </button>
                 </div>
 
@@ -503,11 +503,11 @@ export default function Queue() {
                         {s.content}
                       </div>
                     ) : (
-                      <div style={{ fontStyle: "italic", color: "var(--muted)", marginBottom: 8 }}>ไม่มีเนื้อหาบรรยายเพิ่มเติม</div>
+                      <div style={{ fontStyle: "italic", color: "var(--muted)", marginBottom: 8 }}>{lang === "th" ? "ไม่มีเนื้อหาบรรยายเพิ่มเติม" : "No additional description"}</div>
                     )}
                     {s.url && (
                       <a href={s.url} target="_blank" rel="noreferrer" style={{ color: "var(--blue)", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        🔗 ดูที่มาต้นฉบับ
+                        🔗 {lang === "th" ? "ดูที่มาต้นฉบับ" : "View original source"}
                       </a>
                     )}
                   </div>
@@ -519,25 +519,25 @@ export default function Queue() {
                     {s.status === "pending" && (
                       <>
                         <button className="success sm" onClick={() => approve(s.id)}>
-                          ✓ Approve
+                          ✓ {t("queue_approve_btn", "Approve")}
                         </button>
                         <button className="btn-outline-danger sm" onClick={() => reject(s.id)}>
-                          ✗ Reject
+                          ✗ {t("queue_reject_btn", "Reject")}
                         </button>
                       </>
                     )}
                     {s.status === "approved" && (
                       <button className="primary sm" onClick={() => approve(s.id)}>
-                        🔄 สร้างสคริปต์ใหม่
+                        🔄 {lang === "th" ? "สร้างสคริปต์ใหม่" : "Regenerate Script"}
                       </button>
                     )}
                   </div>
 
                   <Dropdown
-                    trigger={<button className="icon-btn" title="เมนูเพิ่มเติม">⋯</button>}
+                    trigger={<button className="icon-btn" title={lang === "th" ? "เมนูเพิ่มเติม" : "More actions"}>⋯</button>}
                     items={[
-                      ...(s.url ? [{ label: "เปิดลิงก์ต้นฉบับ", icon: "🔗", onClick: () => window.open(s.url, "_blank") }] : []),
-                      { label: "ลบเรื่องนี้ถาวร", icon: "🗑️", danger: true, onClick: () => destroy(s.id) },
+                      ...(s.url ? [{ label: lang === "th" ? "เปิดลิงก์ต้นฉบับ" : "Open Original Link", icon: "🔗", onClick: () => window.open(s.url, "_blank") }] : []),
+                      { label: lang === "th" ? "ลบเรื่องนี้ถาวร" : "Delete Story Permanently", icon: "🗑️", danger: true, onClick: () => destroy(s.id) },
                     ]}
                   />
                 </div>
@@ -548,9 +548,9 @@ export default function Queue() {
           {!visibleItems.length && (
             <div className="card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: 36, color: "var(--muted)" }}>
               {items.length > 0 && hideLowScore ? (
-                <>ทุกเรื่องถูกซ่อนเพราะคะแนนต่ำกว่า {SCORE_THRESHOLD.toFixed(1)} — นำเครื่องหมายออกจาก "ซ่อน &lt; 7.0" เพื่อดูทั้งหมด</>
+                <>{lang === "th" ? `ทุกเรื่องถูกซ่อนเพราะคะแนนต่ำกว่า ${SCORE_THRESHOLD.toFixed(1)} — นำเครื่องหมายออกจาก "ซ่อน < 7.0" เพื่อดูทั้งหมด` : `All stories hidden because score < ${SCORE_THRESHOLD.toFixed(1)} — uncheck "Hide < 7.0" to view all`}</>
               ) : (
-                <>ยังไม่มีเรื่องในหน้านี้ — กด Scan RSS หรือใช้ AI Classic Finder ด้านบน</>
+                <>{t("queue_empty", "No stories in this view — click Scan RSS or use AI Story Finder above")}</>
               )}
             </div>
           )}

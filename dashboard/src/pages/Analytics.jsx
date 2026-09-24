@@ -101,7 +101,9 @@ export default function Analytics() {
 
         {posts.length === 0 ? (
           <div className="meta" style={{ marginTop: 8 }}>
-            ยังไม่มี post — เผยแพร่จากหน้า Videos ก่อน แล้วกด <b>🔄 Refresh now</b>
+            {lang === "th"
+              ? <>ยังไม่มี post — เผยแพร่จากหน้า Videos ก่อน แล้วกด <b>🔄 Refresh now</b></>
+              : <>No posts yet — publish from the Videos tab first, then click <b>🔄 Refresh now</b></>}
           </div>
         ) : (
           <div style={{ overflowX: "auto", marginTop: 12 }}>
@@ -160,10 +162,21 @@ export default function Analytics() {
             we don't have to triage them in DMs. */}
         {published.length > 0 && published.every((p) => p.views === 0 && p.likes === 0) && (
           <div className="meta" style={{ marginTop: 12, padding: 10, background: "#1a1a2e", borderRadius: 8, fontSize: 12, lineHeight: 1.5 }}>
-            <b>ตัวเลขยังเป็น 0?</b> สาเหตุที่พบบ่อย:
-            <br />• <b>YouTube</b> — ต้องมี <code>YOUTUBE_TOKEN_FILE</code> (OAuth) → กด Refresh now หลัง publish
-            <br />• <b>TikTok / Instagram</b> — ยังไม่มี API → ต้องใส่ตัวเลขเองที่หน้า Videos → "📊 Manual upload tracking"
-            <br />• <b>เพิ่งเผยแพร่</b> — รอ 5–10 นาทีให้ platform index ก่อนกด Refresh
+            {lang === "th" ? (
+              <>
+                <b>ตัวเลขยังเป็น 0?</b> สาเหตุที่พบบ่อย:
+                <br />• <b>YouTube</b> — ต้องมี <code>YOUTUBE_TOKEN_FILE</code> (OAuth) → กด Refresh now หลัง publish
+                <br />• <b>TikTok / Instagram</b> — ยังไม่มี API → ต้องใส่ตัวเลขเองที่หน้า Videos → "📊 Manual upload tracking"
+                <br />• <b>เพิ่งเผยแพร่</b> — รอ 5–10 นาทีให้ platform index ก่อนกด Refresh
+              </>
+            ) : (
+              <>
+                <b>Numbers still 0?</b> Common reasons:
+                <br />• <b>YouTube</b> — Requires <code>YOUTUBE_TOKEN_FILE</code> (OAuth) → click Refresh now after publishing
+                <br />• <b>TikTok / Instagram</b> — No public API → enter stats manually in Videos → "📊 Manual upload tracking"
+                <br />• <b>Just published</b> — Wait 5–10 minutes for platform to index before refreshing
+              </>
+            )}
           </div>
         )}
       </div>
@@ -172,7 +185,7 @@ export default function Analytics() {
           who want a sanity check that the collector is actually appending. */}
       {(data.rows || []).length > 0 && (
         <div className="card" style={{ marginTop: 16 }}>
-          <h3>🕒 Recent collection rows ({data.rows.length} ทั้งหมด)</h3>
+          <h3>🕒 Recent collection rows ({data.rows.length} {lang === "th" ? "ทั้งหมด" : "total"})</h3>
           {(data.rows || []).slice(-20).reverse().map((r) => (
             <div key={r.id} className="row" style={{ justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1a1a2e", fontSize: 12 }}>
               <span>post #{r.post_id} <span className="meta">{fmtLocal(r.collected_at)}</span></span>

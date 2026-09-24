@@ -3,6 +3,7 @@ import { api, BASE, API_KEY } from "../api";
 import { toast } from "../components/Toast.jsx";
 import { Dropdown } from "../components/Dropdown.jsx";
 import { useNiche } from "../context/NicheContext.jsx";
+import { useLanguage } from "../context/LanguageContext.jsx";
 
 function kwToText(json) {
   if (!json) return "";
@@ -83,6 +84,7 @@ function isYoutubeSlotValue(val) {
 
 export default function Scripts() {
   const { niche } = useNiche();
+  const { lang, t } = useLanguage();
   const activeBeats = (niche?.storyBeats && niche.storyBeats.length > 0)
     ? niche.storyBeats.map((b, idx) => ({
         key: b.id,
@@ -183,11 +185,11 @@ export default function Scripts() {
       if (Object.keys(storyPatch).length) {
         await api.updateStory(s.story_id, storyPatch);
       }
-      toast("✓ บันทึกการแก้ไขแล้ว");
+      toast(lang === "th" ? "✓ บันทึกการแก้ไขแล้ว" : "✓ Saved changes");
       clearEditsForScript(s.id);
       load();
     } catch (e) {
-      toast("Save ไม่สำเร็จ: " + (e.message || e));
+      toast("Save error: " + (e.message || e));
     }
   }
 
@@ -198,21 +200,21 @@ export default function Scripts() {
       if (Object.keys(storyPatch).length) {
         await api.updateStory(s.story_id, storyPatch);
       }
-      toast("✓ อนุมัติสคริปต์แล้ว — กำลังส่งคิวสร้างวิดีโอ");
+      toast(lang === "th" ? "✓ อนุมัติสคริปต์แล้ว — กำลังส่งคิวสร้างวิดีโอ" : "✓ Script approved — queued for video render");
       clearEditsForScript(s.id);
       load();
     } catch (e) {
-      toast("Approve ไม่สำเร็จ: " + (e.message || e));
+      toast("Approve error: " + (e.message || e));
     }
   }
 
   async function reject(s) {
     try {
       await api.updateScript(s.id, { status: "rejected" });
-      toast("ปฏิเสธสคริปต์แล้ว");
+      toast(lang === "th" ? "ปฏิเสธสคริปต์แล้ว" : "Script rejected");
       load();
     } catch (e) {
-      toast("Reject ไม่สำเร็จ: " + (e.message || e));
+      toast("Reject error: " + (e.message || e));
     }
   }
 
@@ -225,39 +227,39 @@ export default function Scripts() {
         await api.updateStory(s.story_id, storyPatch);
       }
       await api.buildVideo(s.id);
-      toast("🚀 ส่งคิวสร้างวิดีโอใหม่แล้ว…");
+      toast(lang === "th" ? "🚀 ส่งคิวสร้างวิดีโอใหม่แล้ว…" : "🚀 Queued video rebuild…");
       clearEditsForScript(s.id);
       load();
     } catch (e) {
       const msg = String(e.message || e);
       if (msg.includes("429")) {
-        toast("ติด Cooldown 60s: " + msg);
+        toast(lang === "th" ? "ติด Cooldown 60s: " + msg : "Rate limited (60s cooldown): " + msg);
       } else {
-        toast("Rebuild ไม่สำเร็จ: " + msg);
+        toast(lang === "th" ? "Rebuild ไม่สำเร็จ: " + msg : "Rebuild failed: " + msg);
       }
     }
   }
 
   async function destroy(s) {
-    if (!confirm(`ลบ Script #${s.id} และวิดีโอที่เกี่ยวข้องถาวร?`)) return;
+    if (!confirm(lang === "th" ? `ลบ Script #${s.id} และวิดีโอที่เกี่ยวข้องถาวร?` : `Permanently delete Script #${s.id} and related videos?`)) return;
     await api.deleteScript(s.id);
-    toast("ลบสคริปต์แล้ว");
+    toast(lang === "th" ? "ลบสคริปต์แล้ว" : "Script deleted");
     load();
   }
 
   async function regenerate(s, tone) {
-    const toneLabels = { professional: "แบบสอน/มืออาชีพ 👔", finance: "แบบ Finance How-to 💰" };
-    const toneText = toneLabels[tone] || "แบบปกติ";
-    if (!confirm(`Regenerate script ${toneText} จาก story #${s.story_id} ใหม่?`)) return;
+    const toneLabels = { professional: lang === "th" ? "แบบสอน/มืออาชีพ 👔" : "Educational / Professional 👔", finance: lang === "th" ? "แบบ Finance How-to 💰" : "Finance How-to 💰" };
+    const toneText = toneLabels[tone] || (lang === "th" ? "แบบปกติ" : "Standard");
+    if (!confirm(lang === "th" ? `Regenerate script ${toneText} จาก story #${s.story_id} ใหม่?` : `Regenerate ${toneText} script from story #${s.story_id}?`)) return;
     await api.genScript(s.story_id, tone);
-    toast("🔄 กำลังสร้างสคริปต์ใหม่… รอสักครู่");
+    toast(lang === "th" ? "🔄 กำลังสร้างสคริปต์ใหม่… รอสักครู่" : "🔄 Generating new script… please wait");
     setTimeout(load, 5000);
   }
 
   async function generateLong(s) {
-    if (!confirm(`Generate Long-form script (8-12 นาที) จาก story #${s.story_id}?`)) return;
+    if (!confirm(lang === "th" ? `Generate Long-form script (8-12 นาที) จาก story #${s.story_id}?` : `Generate long-form script (8-12 mins) from story #${s.story_id}?`)) return;
     await api.genLongScript(s.story_id);
-    toast("📚 กำลังแต่งสคริปต์ยาว 8-12 นาที…");
+    toast(lang === "th" ? "📚 กำลังแต่งสคริปต์ยาว 8-12 นาที…" : "📚 Generating long-form script (8-12 mins)…");
     setTimeout(load, 15000);
   }
 
@@ -271,7 +273,7 @@ export default function Scripts() {
         return next;
       });
       const n = Array.isArray(res?.applied) ? res.applied.length : 0;
-      toast(`✓ วางแผน Footage สำเร็จ: ${n} slots`);
+      toast(lang === "th" ? `✓ วางแผน Footage สำเร็จ: ${n} slots` : `✓ Planned footage for ${n} slots`);
       await load();
     } catch (e) {
       toast("Visual plan failed: " + (e.message || e));
@@ -284,10 +286,10 @@ export default function Scripts() {
     try {
       setEditTitle((p) => { const n = { ...p }; delete n[s.id]; return n; });
       await api.regenHook(s.id, style);
-      toast(`🔄 กำลังสร้าง Hook แนว ${style}…`);
+      toast(lang === "th" ? `🔄 กำลังสร้าง Hook แนว ${style}…` : `🔄 Generating ${style} hook…`);
       setTimeout(load, 4000);
     } catch (e) {
-      toast("Regen Hook ไม่สำเร็จ: " + (e.message || e));
+      toast(lang === "th" ? "Regen Hook ไม่สำเร็จ: " + (e.message || e) : "Regen Hook failed: " + (e.message || e));
     }
   }
 
@@ -295,36 +297,36 @@ export default function Scripts() {
     try {
       setEdit((p) => { const n = { ...p }; delete n[s.id]; return n; });
       await api.regenBody(s.id, tone);
-      toast("🔄 กำลังสร้างเนื้อหา TTS ใหม่…");
+      toast(lang === "th" ? "🔄 กำลังสร้างเนื้อหา TTS ใหม่…" : "🔄 Generating new narration text…");
       setTimeout(load, 5000);
     } catch (e) {
-      toast("Regen Body ไม่สำเร็จ: " + (e.message || e));
+      toast(lang === "th" ? "Regen Body ไม่สำเร็จ: " + (e.message || e) : "Regen Body failed: " + (e.message || e));
     }
   }
 
   async function handleShorten(s) {
-    if (!confirm("ย่อสคริปต์นี้ให้กระชับขึ้น (~110-150 คำ)?")) return;
+    if (!confirm(lang === "th" ? "ย่อสคริปต์นี้ให้กระชับขึ้น (~110-150 คำ)?" : "Shorten this script to ~110-150 words?")) return;
     try {
       setEdit((p) => { const n = { ...p }; delete n[s.id]; return n; });
       await api.shortenScript(s.id);
-      toast("✂️ กำลังย่อสคริปต์…");
+      toast(lang === "th" ? "✂️ กำลังย่อสคริปต์…" : "✂️ Shortening script…");
       setTimeout(load, 5000);
     } catch (e) {
-      const msg = e.status === 429 ? "เพิ่งย่อไป รอสักครู่แล้วลองใหม่" : (e.message || e);
-      toast("ย่อสคริปต์ไม่สำเร็จ: " + msg);
+      const msg = e.status === 429 ? (lang === "th" ? "เพิ่งย่อไป รอสักครู่แล้วลองใหม่" : "Cooldown active, please wait") : (e.message || e);
+      toast((lang === "th" ? "ย่อสคริปต์ไม่สำเร็จ: " : "Shorten failed: ") + msg);
     }
   }
 
   async function handleTranslateEn(s) {
     setTranslating((p) => ({ ...p, [s.id]: true }));
-    toast("⏳ กำลังแปลเป็นสารคดีภาษาอังกฤษสำหรับช่อง Global...");
+    toast(lang === "th" ? "⏳ กำลังแปลเป็นสารคดีภาษาอังกฤษสำหรับช่อง Global..." : "⏳ Translating to English for Global channel...");
     try {
       await api.translateEn(s.id);
-      toast("✓ แปลภาษาอังกฤษสำเร็จแล้ว!");
+      toast(lang === "th" ? "✓ แปลภาษาอังกฤษสำเร็จแล้ว!" : "✓ English translation complete!");
       setScriptLangTab((p) => ({ ...p, [s.id]: "en" }));
       load();
     } catch (e) {
-      toast("แปลภาษาอังกฤษไม่สำเร็จ: " + (e.message || e));
+      toast((lang === "th" ? "แปลภาษาอังกฤษไม่สำเร็จ: " : "Translation failed: ") + (e.message || e));
     } finally {
       setTranslating((p) => ({ ...p, [s.id]: false }));
     }
@@ -340,11 +342,11 @@ export default function Scripts() {
         await api.updateStory(s.story_id, storyPatch);
       }
       await api.buildVideoEn(s.id);
-      toast("🚀 เริ่มสร้างวิดีโอภาษาอังกฤษ (Global) แล้ว...");
+      toast(lang === "th" ? "🚀 เริ่มสร้างวิดีโอภาษาอังกฤษ (Global) แล้ว..." : "🚀 Rendering English Global video...");
       clearEditsForScript(s.id);
       load();
     } catch (e) {
-      toast("Build EN ไม่สำเร็จ: " + (e.message || e));
+      toast((lang === "th" ? "Build EN ไม่สำเร็จ: " : "Build EN failed: ") + (e.message || e));
     } finally {
       setBuildingEn((p) => ({ ...p, [s.id]: false }));
     }
@@ -364,35 +366,35 @@ export default function Scripts() {
           duration: res.duration_seconds,
         },
       }));
-      toast(`ทด clip สำเร็จ (${res.duration_seconds}s)`);
+      toast(lang === "th" ? `ทด clip สำเร็จ (${res.duration_seconds}s)` : `Test clip successful (${res.duration_seconds}s)`);
     } catch (err) {
       setYtClipTest((p) => ({
         ...p,
         [key]: { loading: false, error: err.message || String(err) },
       }));
-      toast("ทด clip ไม่สำเร็จ: " + (err.message || err));
+      toast((lang === "th" ? "ทด clip ไม่สำเร็จ: " : "Test clip failed: ") + (err.message || err));
     }
   }
 
   return (
     <>
-      <div className="page-title">✍️ Script Review</div>
-      <div className="page-sub">ตรวจสอบ แก้ไข และอนุมัติสคริปต์ก่อนส่งเรนเดอร์เป็นวิดีโอ 9:16</div>
+      <div className="page-title">✍️ {t("scripts_title", "Script Review")}</div>
+      <div className="page-sub">{t("scripts_sub", "Review, edit, and approve scripts before 9:16 video render.")}</div>
 
       {/* Top Bar */}
       <div className="row" style={{ marginBottom: 16, justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <button className="secondary sm" onClick={load}>🔄 Refresh</button>
+        <button className="secondary sm" onClick={load}>{t("refresh", "🔄 Refresh")}</button>
         <button className="btn-outline-danger sm" onClick={async () => {
-          if (!confirm("ลบ Script ที่เป็น (error) หรือถูก reject ทั้งหมดถาวร?")) return;
+          if (!confirm(lang === "th" ? "ลบ Script ที่เป็น (error) หรือถูก reject ทั้งหมดถาวร?" : "Permanently delete all error / rejected scripts?")) return;
           try {
             const res = await api.cleanupErrorScripts();
-            toast(`ลบไป ${res.removed} เรื่อง`);
+            toast(lang === "th" ? `ลบไป ${res.removed} เรื่อง` : `Removed ${res.removed} scripts`);
             load();
           } catch (e) {
             toast("Cleanup failed: " + e.message);
           }
         }}>
-          🧹 ลบสคริปต์ Error / Rejected
+          {t("scripts_cleanup_error", "🧹 Cleanup Error / Rejected")}
         </button>
       </div>
 
@@ -411,17 +413,17 @@ export default function Scripts() {
               <div style={{ flex: 1 }}>
                 <div className="row" style={{ justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>
-                    🎯 Title & Hook (ใช้เป็นชื่อคลิปและหน้าปก)
+                    {t("scripts_title_hook_label", "🎯 Title & Hook (Video Title and Cover)")}
                   </span>
                   
                   {/* Hook Regen Dropdown */}
                   <Dropdown
-                    trigger={<button className="secondary sm" style={{ fontSize: 11, padding: "2px 8px" }}>🎣 เปลี่ยนแนว Hook ▾</button>}
+                    trigger={<button className="secondary sm" style={{ fontSize: 11, padding: "2px 8px" }}>{t("scripts_change_hook", "🎣 Change Hook Angle ▾")}</button>}
                     items={[
-                      { label: "😱 แนวช็อก / ดราม่าเข้ม", onClick: () => handleRegenHook(s, "shock") },
-                      { label: "🤔 แนวตั้งคำถาม / สงสัย", onClick: () => handleRegenHook(s, "curiosity") },
-                      { label: "⚡ แนวสู้กลับ / พลิกเกม", onClick: () => handleRegenHook(s, "turnaround") },
-                      { label: "🔢 แนวลิสต์ / ข้อสรุป", onClick: () => handleRegenHook(s, "listicle") },
+                      { label: lang === "th" ? "😱 แนวช็อก / ดราม่าเข้ม" : "😱 Dramatic / Shock Hook", onClick: () => handleRegenHook(s, "shock") },
+                      { label: lang === "th" ? "🤔 แนวตั้งคำถาม / สงสัย" : "🤔 Curiosity / Question Hook", onClick: () => handleRegenHook(s, "curiosity") },
+                      { label: lang === "th" ? "⚡ แนวสู้กลับ / พลิกเกม" : "⚡ Turnaround / Payback Hook", onClick: () => handleRegenHook(s, "turnaround") },
+                      { label: lang === "th" ? "🔢 แนวลิสต์ / ข้อสรุป" : "🔢 Listicle / Breakdown Hook", onClick: () => handleRegenHook(s, "listicle") },
                     ]}
                   />
                 </div>
@@ -429,7 +431,7 @@ export default function Scripts() {
                 <input
                   type="text"
                   value={editTitle[s.id] ?? (s.title_suggestion || "")}
-                  placeholder={`Script #${s.id} — AI ยังไม่ได้ generate title`}
+                  placeholder={lang === "th" ? `Script #${s.id} — AI ยังไม่ได้ generate title` : `Script #${s.id} — AI hasn't generated a title yet`}
                   onChange={(e) => setEditTitle((p) => ({ ...p, [s.id]: e.target.value }))}
                   style={{
                     fontSize: 16,
@@ -454,25 +456,25 @@ export default function Scripts() {
                 className={`pill-tab ${curTab === "narration" ? "active" : ""}`}
                 onClick={() => setActiveTab((p) => ({ ...p, [s.id]: "narration" }))}
               >
-                📜 บทพากย์ (Script)
+                {t("scripts_tab_narration", "📜 Narration Script")}
               </button>
               <button
                 className={`pill-tab ${curTab === "timeline" ? "active" : ""}`}
                 onClick={() => setActiveTab((p) => ({ ...p, [s.id]: "timeline" }))}
               >
-                🎬 Footage & Story Beats
+                {t("scripts_tab_timeline", "🎬 Footage & Story Beats")}
               </button>
               <button
                 className={`pill-tab ${curTab === "metadata" ? "active" : ""}`}
                 onClick={() => setActiveTab((p) => ({ ...p, [s.id]: "metadata" }))}
               >
-                🏷️ Social & คำอธิบาย
+                {t("scripts_tab_metadata", "🏷️ Social & Description")}
               </button>
               <button
                 className={`pill-tab ${curTab === "sources" ? "active" : ""}`}
                 onClick={() => setActiveTab((p) => ({ ...p, [s.id]: "sources" }))}
               >
-                🔍 แหล่งอ้างอิง (Fact-Check)
+                {t("scripts_tab_sources", "🔍 Sources (Fact-Check)")}
               </button>
             </div>
 
@@ -487,20 +489,20 @@ export default function Scripts() {
                         className={`sm ${(scriptLangTab[s.id] || "th") === "th" ? "primary" : "secondary"}`}
                         onClick={() => setScriptLangTab((p) => ({ ...p, [s.id]: "th" }))}
                       >
-                        🇹🇭 สคริปต์ภาษาไทย
+                        {t("scripts_lang_th", "🇹🇭 Primary Script")}
                       </button>
                       <button
                         className={`sm ${scriptLangTab[s.id] === "en" ? "primary" : "secondary"}`}
                         onClick={() => setScriptLangTab((p) => ({ ...p, [s.id]: "en" }))}
                         style={{ color: (s.body_en || editEnBody[s.id]) ? "#c084fc" : undefined }}
                       >
-                        🌐 English (Global) {(s.body_en || editEnBody[s.id]) ? "✓" : ""}
+                        {t("scripts_lang_en", "🌐 English (Global)")} {(s.body_en || editEnBody[s.id]) ? "✓" : ""}
                       </button>
                     </div>
 
                     {(scriptLangTab[s.id] || "th") === "th" ? (
                       <span className="badge" style={{ background: "rgba(255,255,255,0.05)", color: "var(--muted)", fontWeight: 600 }}>
-                        ⏱️ ~{wordCount} คำ (~{estSeconds} วิ)
+                        ⏱️ ~{wordCount} {lang === "th" ? "คำ" : "words"} (~{estSeconds} {lang === "th" ? "วิ" : "s"})
                       </span>
                     ) : (
                       (s.body_en || editEnBody[s.id]) && (
@@ -514,11 +516,11 @@ export default function Scripts() {
                   {/* Fixed Right Actions Cluster */}
                   {(scriptLangTab[s.id] || "th") === "th" ? (
                     <div className="row" style={{ gap: 6, marginLeft: "auto" }}>
-                      <button className="secondary sm" onClick={() => handleShorten(s)} title="ย่อสคริปต์ให้กระชับแต่คงประเด็นหลัก">
-                        ✂️ ย่อให้สั้นลง
+                      <button className="secondary sm" onClick={() => handleShorten(s)} title={lang === "th" ? "ย่อสคริปต์ให้กระชับแต่คงประเด็นหลัก" : "Shorten script while keeping key points"}>
+                        {t("scripts_shorten", "✂️ Shorten")}
                       </button>
-                      <button className="secondary sm" onClick={() => handleRegenBody(s)} title="เขียนบทพากย์ใหม่">
-                        🔄 Regen TTS
+                      <button className="secondary sm" onClick={() => handleRegenBody(s)} title={lang === "th" ? "เขียนบทพากย์ใหม่" : "Regenerate narration body"}>
+                        {t("scripts_regen_tts", "🔄 Regen TTS")}
                       </button>
                     </div>
                   ) : (
@@ -541,7 +543,7 @@ export default function Scripts() {
                   <textarea
                     value={thBody}
                     onChange={(e) => setEdit((p) => ({ ...p, [s.id]: e.target.value }))}
-                    placeholder="เนื้อหาสคริปต์ที่ TTS จะอ่าน..."
+                    placeholder={lang === "th" ? "เนื้อหาสคริปต์ที่ TTS จะอ่าน..." : "Narration script text for voiceover..."}
                     style={{ minHeight: 140, fontSize: 13.5, lineHeight: 1.6 }}
                   />
                 ) : (
@@ -569,17 +571,19 @@ export default function Scripts() {
                     ) : (
                       <div style={{ textAlign: "center", padding: "28px 16px" }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#d8b4fe", marginBottom: 6 }}>
-                          🌐 ยังไม่มีสคริปต์เวอร์ชันภาษาอังกฤษ
+                          {lang === "th" ? "🌐 ยังไม่มีสคริปต์เวอร์ชันภาษาอังกฤษ" : "🌐 No English Global Script Yet"}
                         </div>
                         <div style={{ fontSize: 12.5, color: "var(--muted)", maxWidth: 460, margin: "0 auto 14px" }}>
-                          กดปุ่มด้านล่างเพื่อให้ AI แปลและเรียบเรียงเป็นสคริปต์สารคดีภาษาอังกฤษสำหรับช่อง Global
+                          {lang === "th"
+                            ? "กดปุ่มด้านล่างเพื่อให้ AI แปลและเรียบเรียงเป็นสคริปต์สารคดีภาษาอังกฤษสำหรับช่อง Global"
+                            : "Click below to translate and adapt into an English documentary script for Global audiences."}
                         </div>
                         <button
                           className="primary sm"
                           onClick={() => handleTranslateEn(s)}
                           disabled={translating[s.id]}
                         >
-                          {translating[s.id] ? "⏳ กำลังแปล..." : "🌐 แปลเป็นภาษาอังกฤษ (Translate to EN)"}
+                          {translating[s.id] ? (lang === "th" ? "⏳ กำลังแปล..." : "⏳ Translating...") : (lang === "th" ? "🌐 แปลเป็นภาษาอังกฤษ (Translate to EN)" : "🌐 Translate to English")}
                         </button>
                       </div>
                     )}
@@ -604,24 +608,26 @@ export default function Scripts() {
                 <div style={{ background: "var(--panel2)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div className="row" style={{ justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                      💡 ใส่ YouTube URL (หรือ URL@1:30-2:00) / ไฟล์ภาพ / ai:คีย์เวิร์ด · เว้นว่าง = ระบบ Auto ค้นหาให้
+                      💡 {lang === "th"
+                        ? "ใส่ YouTube URL (หรือ URL@1:30-2:00) / ไฟล์ภาพ / ai:คีย์เวิร์ด · เว้นว่าง = ระบบ Auto ค้นหาให้"
+                        : "YouTube URL (@1:30-2:00), Image URL, or ai:prompt · Blank = Auto Pexels/CC"}
                     </div>
                     <div className="row" style={{ gap: 6 }}>
                       <button
                         className="secondary sm"
                         onClick={() => handleVisualPlan(s, false)}
                         disabled={!!planningVisuals[s.id]}
-                        title="ให้ AI วิเคราะห์สคริปต์และวางแผนภาพในช่องว่าง"
+                        title={lang === "th" ? "ให้ AI วิเคราะห์สคริปต์และวางแผนภาพในช่องว่าง" : "Let AI analyze script and plan visual slots"}
                       >
-                        {planningVisuals[s.id] ? "กำลังวางแผน..." : "🤖 Auto Visual Plan"}
+                        {planningVisuals[s.id] ? (lang === "th" ? "กำลังวางแผน..." : "Planning...") : "🤖 Auto Visual Plan"}
                       </button>
                       <button
                         className="secondary sm"
                         onClick={() => handleVisualPlan(s, true)}
                         disabled={!!planningVisuals[s.id]}
-                        title="ทับทุกช่องด้วยแผนภาพใหม่ของ AI"
+                        title={lang === "th" ? "ทับทุกช่องด้วยแผนภาพใหม่ของ AI" : "Overwrite all slots with new AI visual plan"}
                       >
-                        🔄 รีเซ็ตและวางแผนใหม่
+                        🔄 {lang === "th" ? "รีเซ็ตและวางแผนใหม่" : "Reset & Re-plan"}
                       </button>
                     </div>
                   </div>
@@ -654,16 +660,16 @@ export default function Scripts() {
                                   onClick={() => updateSlot(b.key, "")}
                                   style={{ fontSize: 10, padding: "1px 6px" }}
                                 >
-                                  🔓 ปลดล็อค
+                                  🔓 {lang === "th" ? "ปลดล็อค" : "Unlock"}
                                 </button>
                               ) : (
                                 <button
                                   className="btn-subtle sm"
                                   onClick={() => updateSlot(b.key, "__SKIP__")}
                                   style={{ fontSize: 10, padding: "1px 6px", color: "var(--muted)" }}
-                                  title="ข้าม slot นี้ (ใช้ stock แทน)"
+                                  title={lang === "th" ? "ข้าม slot นี้ (ใช้ stock แทน)" : "Skip this slot (use stock instead)"}
                                 >
-                                  🚫 ข้าม
+                                  🚫 {lang === "th" ? "ข้าม" : "Skip"}
                                 </button>
                               )}
                             </div>
@@ -671,13 +677,13 @@ export default function Scripts() {
 
                           {isSkipped ? (
                             <div style={{ padding: "6px 8px", background: "var(--red-bg)", borderRadius: 4, color: "var(--red)", fontSize: 11, textAlign: "center" }}>
-                              🚫 ข้ามรูปจริง — ใช้ stock แทน
+                              🚫 {lang === "th" ? "ข้ามรูปจริง — ใช้ stock แทน" : "Skip case media — use stock"}
                             </div>
                           ) : (
                             <input
                               type="text"
                               value={val}
-                              placeholder="YouTube URL@1:30-2:00 / File:... / เว้นว่าง = auto"
+                              placeholder={lang === "th" ? "YouTube URL@1:30-2:00 / File:... / เว้นว่าง = auto" : "YouTube URL@1:30-2:00 / File URL / Blank = auto"}
                               onChange={(e) => updateSlot(b.key, e.target.value)}
                               style={{ fontFamily: "monospace", fontSize: 11.5, padding: "5px 8px" }}
                             />
@@ -700,7 +706,7 @@ export default function Scripts() {
                                   onClick={() => handleTestYoutubeClip(s.story_id, b.key, val)}
                                   style={{ fontSize: 10.5, padding: "2px 6px" }}
                                 >
-                                  {ytClipTest[testKey]?.loading ? "กำลังทด..." : "▶ ทด clip"}
+                                  {ytClipTest[testKey]?.loading ? (lang === "th" ? "กำลังทด..." : "Testing...") : (lang === "th" ? "▶ ทด clip" : "▶ Test clip")}
                                 </button>
                               )}
                               
@@ -725,16 +731,16 @@ export default function Scripts() {
                                     const res = await r.json();
                                     if (res.url) {
                                       updateSlot(b.key, res.url);
-                                      toast("✓ อัปโหลดสำเร็จ");
+                                      toast(lang === "th" ? "✓ อัปโหลดสำเร็จ" : "✓ Upload successful");
                                     }
                                   } catch (err) {
-                                    toast("อัปโหลดไม่สำเร็จ: " + err.message);
+                                    toast((lang === "th" ? "อัปโหลดไม่สำเร็จ: " : "Upload failed: ") + err.message);
                                   }
                                   e.target.value = "";
                                 }}
                               />
                               <label htmlFor={`upload-${s.id}-${b.key}`} style={{ fontSize: 10.5, cursor: "pointer", background: "var(--panel2)", padding: "2px 6px", borderRadius: 4, color: "var(--muted)", border: "1px solid var(--border)" }}>
-                                📁 อัปโหลด
+                                📁 {lang === "th" ? "อัปโหลด" : "Upload"}
                               </label>
                             </div>
                             <span style={{ fontSize: 10, color: "var(--muted)" }}>{b.hint}</span>
@@ -754,17 +760,17 @@ export default function Scripts() {
                   {/* Left: Description & Affiliate */}
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 4 }}>
-                      📝 คำอธิบายโพสต์ (Description / Caption พร้อม CTA)
+                      📝 {lang === "th" ? "คำอธิบายโพสต์ (Description / Caption พร้อม CTA)" : "Description / Post Caption with CTA"}
                     </div>
                     <textarea
                       value={editDesc[s.id] !== undefined ? editDesc[s.id] : (s.description || "")}
                       onChange={(e) => setEditDesc((p) => ({ ...p, [s.id]: e.target.value }))}
-                      placeholder="คำอธิบายโพสต์ 2-3 ประโยค..."
+                      placeholder={lang === "th" ? "คำอธิบายโพสต์ 2-3 ประโยค..." : "Post description 2-3 sentences..."}
                       style={{ minHeight: 80, marginBottom: 10 }}
                     />
 
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 4 }}>
-                      🔗 ลิงก์ Affiliate (ถ้ามี)
+                      🔗 {lang === "th" ? "ลิงก์ Affiliate (ถ้ามี)" : "Affiliate Link (Optional)"}
                     </div>
                     <input
                       type="text"
@@ -777,7 +783,7 @@ export default function Scripts() {
                   {/* Right: Hashtags & Visual Keywords */}
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 4 }}>
-                      🏷️ แฮชแท็ก (#Hashtags)
+                      🏷️ {lang === "th" ? "แฮชแท็ก (#Hashtags)" : "Hashtags (#Hashtags)"}
                     </div>
                     <input
                       type="text"
@@ -788,7 +794,7 @@ export default function Scripts() {
                     />
 
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 4 }}>
-                      🎬 Pexels Visual Keywords (1 ฉากต่อบรรทัด, ภาษาอังกฤษ)
+                      🎬 {lang === "th" ? "Pexels Visual Keywords (1 ฉากต่อบรรทัด, ภาษาอังกฤษ)" : "Visual Keywords (1 scene per line, English)"}
                     </div>
                     <textarea
                       value={editKw[s.id] !== undefined ? editKw[s.id] : kwToText(s.visual_keywords)}
@@ -825,7 +831,7 @@ export default function Scripts() {
               return (
                 <div style={{ background: "var(--panel2)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 8 }}>
-                    📚 แหล่งข้อมูลที่อ้างอิง:
+                    📚 {lang === "th" ? "แหล่งข้อมูลที่อ้างอิง:" : "References & Sources:"}
                   </div>
                   <div className="row" style={{ flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {references.length > 0 ? (
@@ -848,17 +854,21 @@ export default function Scripts() {
                         </a>
                       ))
                     ) : (
-                      <span style={{ fontSize: 12, color: "var(--amber)" }}>⚠️ ยังไม่มีข้อมูลอ้างอิงชัดเจน</span>
+                      <span style={{ fontSize: 12, color: "var(--amber)" }}>
+                        ⚠️ {lang === "th" ? "ยังไม่มีข้อมูลอ้างอิงชัดเจน" : "No clear references recorded"}
+                      </span>
                     )}
                   </div>
 
                   <div className="row" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <div style={{ flex: "1 1 240px" }}>
-                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>คำค้นหาภาษาอังกฤษ (Fact-check Query):</div>
+                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>
+                        {lang === "th" ? "คำค้นหาภาษาอังกฤษ (Fact-check Query):" : "Fact-Check English Query:"}
+                      </div>
                       <input
                         type="text"
                         value={editEnglishTitle[s.story_id] ?? story.english_title ?? ""}
-                        placeholder="e.g. Charles Ponzi"
+                        placeholder="e.g. Case Topic"
                         onChange={(e) => setEditEnglishTitle((p) => ({ ...p, [s.story_id]: e.target.value }))}
                         style={{ fontSize: 12, padding: "5px 8px" }}
                       />
@@ -896,33 +906,33 @@ export default function Scripts() {
                 )}
                 
                 <button className="secondary" onClick={() => save(s)}>
-                  💾 บันทึกการแก้ไข
+                  {t("scripts_save_btn", "💾 Save Changes")}
                 </button>
 
                 {/* Unified Regen Dropdown */}
                 <Dropdown
-                  trigger={<button className="secondary">🔄 Regen บทพากย์ ▾</button>}
+                  trigger={<button className="secondary">{t("scripts_regen_dropdown", "🔄 Regen Script ▾")}</button>}
                   items={[
-                    { label: "🔄 Regen Short (ทั่วไป)", onClick: () => regenerate(s) },
-                    { label: "👔 Regen โทนมืออาชีพ / สอน", onClick: () => regenerate(s, "professional") },
-                    { label: "💰 Regen โทน Finance How-to", onClick: () => regenerate(s, "finance") },
-                    { label: "📚 Gen Long-form (8-12 นาที)", onClick: () => generateLong(s) },
+                    { label: lang === "th" ? "🔄 Regen Short (ทั่วไป)" : "🔄 Regen Standard Short", onClick: () => regenerate(s) },
+                    { label: lang === "th" ? "👔 Regen โทนมืออาชีพ / สอน" : "👔 Regen Educational / Professional", onClick: () => regenerate(s, "professional") },
+                    { label: lang === "th" ? "💰 Regen โทน Finance How-to" : "💰 Regen Finance How-to", onClick: () => regenerate(s, "finance") },
+                    { label: lang === "th" ? "📚 Gen Long-form (8-12 นาที)" : "📚 Gen Long-form (8-12 mins)", onClick: () => generateLong(s) },
                     { divider: true },
-                    { label: "🎙️ Regen TTS Body เท่านั้น", onClick: () => handleRegenBody(s) },
-                    { label: "✂️ ย่อสคริปต์ให้กระชับลง", onClick: () => handleShorten(s) },
+                    { label: lang === "th" ? "🎙️ Regen TTS Body เท่านั้น" : "🎙️ Regen TTS Narration Only", onClick: () => handleRegenBody(s) },
+                    { label: lang === "th" ? "✂️ ย่อสคริปต์ให้กระชับลง" : "✂️ Shorten Script", onClick: () => handleShorten(s) },
                   ]}
                 />
               </div>
 
               {/* More Actions Dropdown */}
               <Dropdown
-                trigger={<button className="icon-btn" title="ตัวเลือกเพิ่มเติม">⋯</button>}
+                trigger={<button className="icon-btn" title={t("more_options", "⋯ More")}>⋯</button>}
                 items={[
-                  { label: "🌐 แปลสคริปต์ภาษาอังกฤษ (EN)", icon: "🌐", onClick: () => handleTranslateEn(s) },
-                  { label: "🚀 Build EN Video (Global)", icon: "🎬", onClick: () => handleBuildEn(s) },
+                  { label: lang === "th" ? "🌐 แปลสคริปต์ภาษาอังกฤษ (EN)" : "🌐 Translate to English (EN)", icon: "🌐", onClick: () => handleTranslateEn(s) },
+                  { label: lang === "th" ? "🚀 Build EN Video (Global)" : "🚀 Build EN Video (Global)", icon: "🎬", onClick: () => handleBuildEn(s) },
                   { divider: true },
-                  ...(s.status === "draft" ? [{ label: "✗ ปฏิเสธสคริปต์ (Reject)", icon: "✗", onClick: () => reject(s) }] : []),
-                  { label: "🗑️ ลบสคริปต์นี้ถาวร", icon: "🗑️", danger: true, onClick: () => destroy(s) },
+                  ...(s.status === "draft" ? [{ label: lang === "th" ? "✗ ปฏิเสธสคริปต์ (Reject)" : "✗ Reject Script", icon: "✗", onClick: () => reject(s) }] : []),
+                  { label: lang === "th" ? "🗑️ ลบสคริปต์นี้ถาวร" : "🗑️ Delete Script Permanently", icon: "🗑️", danger: true, onClick: () => destroy(s) },
                 ]}
               />
             </div>
@@ -933,7 +943,7 @@ export default function Scripts() {
 
       {!items.length && (
         <div className="card" style={{ textAlign: "center", padding: 36, color: "var(--muted)" }}>
-          ยังไม่มีสคริปต์ — ให้ไปอนุมัติเรื่องใน Story Queue ก่อน
+          {t("scripts_empty", "No scripts yet — approve stories in Story Queue first")}
         </div>
       )}
     </>
