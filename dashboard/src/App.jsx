@@ -11,43 +11,70 @@ import Assets from "./pages/Assets.jsx";
 import Toast from "./components/Toast.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { NicheProvider, useNiche } from "./context/NicheContext.jsx";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext.jsx";
 
-const TABS = [
-  { id: "queue", label: "📥 Queue" },
-  { id: "scripts", label: "✍️ Scripts" },
-  { id: "videos", label: "🎬 Videos" },
-  { id: "calendar", label: "📅 Calendar" },
-  { id: "analytics", label: "📊 Analytics" },
-  { id: "assets", label: "🎨 Assets" },
-  { id: "prompts", label: "📝 Prompts" },
-  { id: "system", label: "🖥️ System" },
-  { id: "settings", label: "⚙️ Settings" },
+const TAB_DEFS = [
+  { id: "queue", key: "tab_queue", defaultLabel: "📥 Queue" },
+  { id: "scripts", key: "tab_scripts", defaultLabel: "✍️ Scripts" },
+  { id: "videos", key: "tab_videos", defaultLabel: "🎬 Videos" },
+  { id: "calendar", key: "tab_calendar", defaultLabel: "📅 Calendar" },
+  { id: "analytics", key: "tab_analytics", defaultLabel: "📊 Analytics" },
+  { id: "assets", key: "tab_assets", defaultLabel: "🎨 Assets" },
+  { id: "prompts", key: "tab_prompts", defaultLabel: "📝 Prompts" },
+  { id: "system", key: "tab_system", defaultLabel: "🖥️ System" },
+  { id: "settings", key: "tab_settings", defaultLabel: "⚙️ Settings" },
 ];
 
 function AppContent() {
   const [tab, setTab] = useState("queue");
   const { niche } = useNiche();
+  const { lang, setLang, t } = useLanguage();
+
+  const tabs = TAB_DEFS.map((d) => ({
+    id: d.id,
+    label: t(d.key, d.defaultLabel),
+  }));
 
   useEffect(() => {
-    const tabObj = TABS.find((t) => t.id === tab);
+    const tabObj = tabs.find((t) => t.id === tab);
     const tabName = tabObj ? tabObj.label.replace(/^[^\p{L}\p{N}]+\s*/u, "") : "Dashboard";
     document.title = niche?.name
       ? `ProofEngine — ${niche.name} | ${tabName}`
       : `ProofEngine — ${tabName}`;
-  }, [tab, niche]);
+  }, [tab, niche, lang, tabs]);
 
   return (
     <div className="layout">
       <Toast />
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-title">⚡ ProofEngine</div>
+          <div className="brand-header">
+            <div className="brand-title">⚡ ProofEngine</div>
+            <div className="lang-toggle" role="group" aria-label="Language selection">
+              <button
+                type="button"
+                className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                onClick={() => setLang("en")}
+                title="Switch to English"
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={`lang-btn ${lang === "th" ? "active" : ""}`}
+                onClick={() => setLang("th")}
+                title="เปลี่ยนเป็นภาษาไทย"
+              >
+                TH
+              </button>
+            </div>
+          </div>
           <div className="brand-sub">
-            {niche ? `${niche.name} (${niche.id})` : "Short-form Automation"}
+            {niche ? `${niche.name} (${niche.id})` : t("brand_sub_default", "Short-form Automation")}
           </div>
         </div>
         <nav className="nav">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               className={`nav-btn ${tab === t.id ? "active" : ""}`}
@@ -78,8 +105,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <NicheProvider>
-      <AppContent />
-    </NicheProvider>
+    <LanguageProvider>
+      <NicheProvider>
+        <AppContent />
+      </NicheProvider>
+    </LanguageProvider>
   );
 }

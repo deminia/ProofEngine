@@ -1,15 +1,16 @@
 import { useEffect, useState, useMemo } from "react";
 import { api } from "../api";
 import { useNiche } from "../context/NicheContext.jsx";
+import { useLanguage } from "../context/LanguageContext.jsx";
 import { toast } from "../components/Toast.jsx";
 import { Dropdown } from "../components/Dropdown.jsx";
 
-const FILTERS = [
-  { key: "pending", label: "🟡 Pending" },
-  { key: "approved", label: "✅ Approved" },
-  { key: "rejected", label: "🗑 Rejected" },
-  { key: "scripted", label: "📝 Scripted" },
-  { key: "", label: "📂 All" },
+const FILTER_DEFS = [
+  { key: "pending", keyName: "queue_filter_pending", defaultLabel: "🟡 Pending" },
+  { key: "approved", keyName: "queue_filter_approved", defaultLabel: "✅ Approved" },
+  { key: "rejected", keyName: "queue_filter_rejected", defaultLabel: "🗑 Rejected" },
+  { key: "scripted", keyName: "queue_filter_scripted", defaultLabel: "📝 Scripted" },
+  { key: "", keyName: "queue_filter_all", defaultLabel: "📂 All" },
 ];
 
 const SCORE_THRESHOLD = 7.0;
@@ -40,6 +41,15 @@ function findLikelyDuplicates(story, allItems) {
 
 export default function Queue() {
   const { niche } = useNiche();
+  const { lang, t } = useLanguage();
+
+  const filters = useMemo(() => {
+    return FILTER_DEFS.map((f) => ({
+      key: f.key,
+      label: t(f.keyName, f.defaultLabel),
+    }));
+  }, [lang]);
+
   const tiers = (niche?.discoveryTiers && niche.discoveryTiers.length > 0) ? niche.discoveryTiers : [
     { id: "all", label: "Stories", emoji: "⚡", categories: [] }
   ];
@@ -185,12 +195,12 @@ export default function Queue() {
 
   return (
     <>
-      <div className="page-title">🔍 Story Queue</div>
+      <div className="page-title">🔍 {t("queue_title", "Story Queue")}</div>
       <div className="page-sub">
-        คัดเลือกเรื่องไวรัลก่อนส่งต่อไปเขียนบทพากย์
+        {t("queue_sub", "Screen and approve viral topic angles before generating scripts")}
         {counts.total != null && (
           <span style={{ marginLeft: 10, color: "var(--muted)" }}>
-            ({counts.total} เรื่อง • รอตรวจ {counts.pending || 0} • อนุมัติแล้ว {counts.approved || 0})
+            ({counts.total} {lang === "th" ? "เรื่อง" : "total"} • {lang === "th" ? "รอตรวจ" : "pending"} {counts.pending || 0} • {lang === "th" ? "อนุมัติแล้ว" : "approved"} {counts.approved || 0})
           </span>
         )}
       </div>
@@ -201,7 +211,7 @@ export default function Queue() {
           
           {/* Status Filter Tabs */}
           <div className="pill-tabs">
-            {FILTERS.map((f) => (
+            {filters.map((f) => (
               <button
                 key={f.key || "all"}
                 className={`pill-tab ${filter === f.key ? "active" : ""}`}
@@ -214,13 +224,13 @@ export default function Queue() {
 
           {/* Quick Actions & Cleanup */}
           <div className="row" style={{ gap: 8 }}>
-            <button className="secondary sm" onClick={scan}>🤖 Scan RSS</button>
-            <button className="secondary sm" onClick={load}>🔄 Refresh</button>
+            <button className="secondary sm" onClick={scan}>{t("queue_scan_rss", "📡 Scan RSS")}</button>
+            <button className="secondary sm" onClick={load}>{t("queue_refresh", "🔄 Refresh")}</button>
             <Dropdown
-              trigger={<button className="secondary sm">🧹 เคลียร์ข้อมูล ▾</button>}
+              trigger={<button className="secondary sm">🧹 {t("queue_batch", "Batch Operations")} ▾</button>}
               items={[
                 {
-                  label: `ลบ Rejected ทั้งหมด (${counts.rejected || 0})`,
+                  label: lang === "th" ? `ลบ Rejected ทั้งหมด (${counts.rejected || 0})` : `Delete All Rejected (${counts.rejected || 0})`,
                   icon: "🗑️",
                   danger: true,
                   disabled: !counts.rejected,

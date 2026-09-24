@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { toast } from "../components/Toast.jsx";
+import { useLanguage } from "../context/LanguageContext.jsx";
 import { parseBackendTs } from "./Calendar.jsx";
 
 // Backend stores naive UTC timestamps; reuse Calendar's parseBackendTs so
@@ -31,6 +32,7 @@ function fmtNum(n) {
 }
 
 export default function Analytics() {
+  const { lang, t } = useLanguage();
   const [data, setData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -48,15 +50,15 @@ export default function Analytics() {
     try {
       const fresh = await api.refreshAnalytics();
       setData(fresh);
-      toast("รีเฟรชยอดวิว/ไลก์/คอมเมนต์เรียบร้อย");
+      toast(lang === "th" ? "รีเฟรชยอดวิว/ไลก์/คอมเมนต์เรียบร้อย" : "Analytics refreshed");
     } catch (e) {
-      toast("รีเฟรชล้มเหลว: " + (e?.message || "unknown error"));
+      toast("Refresh error: " + (e?.message || "unknown error"));
     } finally {
       setRefreshing(false);
     }
   }
 
-  if (!data) return <div>Loading…</div>;
+  if (!data) return <div>{t("loading", "Loading…")}</div>;
 
   const posts = data.posts || [];
   const published = posts.filter((p) => p.status === "published");
@@ -66,8 +68,8 @@ export default function Analytics() {
     <>
       <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <div className="page-title">📊 Analytics</div>
-          <div className="page-sub">รวมจากทุก platform</div>
+          <div className="page-title">📊 {t("analytics_title", "Analytics")}</div>
+          <div className="page-sub">{t("analytics_sub", "Consolidated views, likes, and engagement across platforms")}</div>
         </div>
         <button
           onClick={handleRefresh}
@@ -78,25 +80,23 @@ export default function Analytics() {
             padding: "8px 14px", fontWeight: 700, cursor: refreshing ? "wait" : "pointer",
           }}
         >
-          {refreshing ? "⏳ กำลังดึงสถิติ…" : "🔄 Refresh now"}
+          {refreshing ? t("analytics_refreshing", "⏳ Fetching stats…") : t("analytics_refresh", "🔄 Refresh now")}
         </button>
       </div>
 
       <div className="stats">
-        <div className="stat"><div className="label">Total Views</div><div className="value">{fmtNum(data.total_views)}</div></div>
-        <div className="stat"><div className="label">Total Likes</div><div className="value">{fmtNum(data.total_likes)}</div></div>
-        <div className="stat"><div className="label">Total Comments</div><div className="value">{fmtNum(data.total_comments || 0)}</div></div>
-        <div className="stat"><div className="label">Total Shares</div><div className="value">{fmtNum(data.total_shares || 0)}</div></div>
-        <div className="stat"><div className="label">Total Posts</div><div className="value">{data.total_posts}</div></div>
+        <div className="stat"><div className="label">{t("analytics_stat_views", "Total Views")}</div><div className="value">{fmtNum(data.total_views)}</div></div>
+        <div className="stat"><div className="label">{t("analytics_stat_likes", "Total Likes")}</div><div className="value">{fmtNum(data.total_likes)}</div></div>
+        <div className="stat"><div className="label">{t("analytics_stat_comments", "Total Comments")}</div><div className="value">{fmtNum(data.total_comments || 0)}</div></div>
+        <div className="stat"><div className="label">{t("analytics_stat_shares", "Total Shares")}</div><div className="value">{fmtNum(data.total_shares || 0)}</div></div>
+        <div className="stat"><div className="label">{t("analytics_stat_posts", "Total Posts")}</div><div className="value">{data.total_posts}</div></div>
       </div>
 
-      {/* Per-post breakdown — the most useful view for "is anything actually
-          getting traction?". Sorted by views desc on the backend so the top
-          row is your current best performer. */}
+      {/* Per-post breakdown */}
       <div className="card" style={{ marginTop: 16 }}>
         <div className="row" style={{ justifyContent: "space-between" }}>
-          <h3>📋 ต่อโพสต์ ({published.length} published / {collected.length} ดึงสถิติแล้ว)</h3>
-          <span className="meta">รีเฟรชล่าสุด: {data.posts?.[0]?.collected_at ? fmtLocal(data.posts[0].collected_at) : "—"}</span>
+          <h3>{t("analytics_per_post", "📋 Per Post Breakdown")} ({published.length} {lang === "th" ? "published" : "published"} / {collected.length} {lang === "th" ? "ดึงสถิติแล้ว" : "collected"})</h3>
+          <span className="meta">{lang === "th" ? "รีเฟรชล่าสุด: " : "Last updated: "}{data.posts?.[0]?.collected_at ? fmtLocal(data.posts[0].collected_at) : "—"}</span>
         </div>
 
         {posts.length === 0 ? (
