@@ -18,3 +18,6 @@ export function ToastHost() {
   if (!msg) return null;
   return <div className="toast">{msg}</div>;
 }
+
+export default ToastHost;
+
